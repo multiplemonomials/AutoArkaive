@@ -1,7 +1,10 @@
 package com.autoarkaive;
 
-import java.time.LocalTime;
 import java.util.concurrent.PriorityBlockingQueue;
+
+import org.joda.time.LocalTime;
+
+import com.autoarkaive.checkindata.CheckinEntry;
 
 /**
  * Stores a queue of Arkaive checkins that need to be performed, and manages

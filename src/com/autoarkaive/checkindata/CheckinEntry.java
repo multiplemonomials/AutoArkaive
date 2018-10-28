@@ -1,14 +1,21 @@
-package com.autoarkaive;
+package com.autoarkaive.checkindata;
 
-import java.time.LocalTime;
+import java.io.Serializable;
+
+import org.joda.time.LocalTime;
 
 /**
  * Represents the information needed to check someone in to Arkaive
  * @author jamie
  *
  */
-public class CheckinEntry implements Comparable<CheckinEntry>
+public class CheckinEntry implements Comparable<CheckinEntry>, Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2906081294197564985L;
+
 	/**
 	 * latitude and longitude, in decimal degrees
 	 */
@@ -30,7 +37,9 @@ public class CheckinEntry implements Comparable<CheckinEntry>
 	public final String courseName;
 	
 	/**
-	 * Time window where checkin can occur
+	 * Time window where checkin can occur.
+	 * 
+	 * Note: must use Joda Time because Android does not suport Java 8 yet and this class gets serialized
 	 */
 	public final LocalTime checkinStartTime, checkinEndTime;
 
