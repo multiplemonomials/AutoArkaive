@@ -12,17 +12,63 @@ import javax.servlet.http.HttpServletResponse;
 public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+	function addUser(request, response) {
+		System.out.println();
+		System.out.println("Adding a new class");
+
+		String email;
+		String profile_image;
+		String name;
+
+		try {
+			//Establish database connection
+
+			String query = "Insert Into Users"
+
+		}
+		catch() {
+
+		}
+	}
+	
+	function addClass(request, response) {
+		System.out.println();
+		System.out.println("Adding a new class");
+
+		String user_email = req.getParameter(); //Website should be responsible for this, keep in session
+		String class_name;
+		String arkaive_code;
+
+		Latitude //determine types in database
+		Longitude
+		Altitude
+
+		Days 
+		Hour
+
+
+		try {
+			//Establish database connection
+
+			String query = "Insert Into Classes"
+
+		}
+		catch() {
+
+		}
 	}
 
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		doGet(request, response);
 		
-		//receive the json string here
-		//use gson to make it into objects
-		//add those objects to the database
+		String command="";
+		String json="";
+	
+		//Parse json and set in the request parameters;
+		//Look up pretty printing if needed, for debugging
+	
+		//Forward to appropriate method;
 	}
 
 }
