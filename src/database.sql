@@ -18,3 +18,16 @@ CREATE TABLE myClasses(
 	classname VARCHAR(40) NOT NULL
 );
 
+
+/*
+These are the requirements from Jamie's side
+
+
+double latitude, longitude - latitude and longitude, in decimal degrees
+int altitude - altitude in meters
+String username, password - Arkaive login info
+String courseCode - Course code (
+LocalTime checkinStartTime, checkinEndTime - Time window where checkin can occur.
+Note: must use Joda Time’s LocalTime instead of Java’s because Android does not support Java 8 yet 
+
+*/
