@@ -1,15 +1,15 @@
-package com.autoarkaive.checkindata;
+package com.autoarkaive.communications;
 
 import java.io.Serializable;
 
 import org.joda.time.LocalTime;
 
 /**
- * Represents the information needed to check someone in to Arkaive
+ * A request to check the user into Arkaive.  Contains all the information needed to check someone in.
  * @author jamie
  *
  */
-public class CheckinEntry implements Comparable<CheckinEntry>, Serializable
+public class CheckinRequest implements Comparable<CheckinRequest>, Serializable
 {
 	/**
 	 * 
@@ -39,7 +39,7 @@ public class CheckinEntry implements Comparable<CheckinEntry>, Serializable
 	/**
 	 * Time window where checkin can occur.
 	 * 
-	 * Note: must use Joda Time because Android does not suport Java 8 yet and this class gets serialized
+	 * Note: must use Joda Time because Android does not support Java 8 yet and this class gets serialized
 	 */
 	public final LocalTime checkinStartTime, checkinEndTime;
 
@@ -54,8 +54,8 @@ public class CheckinEntry implements Comparable<CheckinEntry>, Serializable
 	 * @param password
 	 * @param courseName
 	 */
-	public CheckinEntry(double latitude, double longitude, int altitude, String username, String password,
-			String courseName, LocalTime checkinStartTime, LocalTime checkinEndTime) 
+	public CheckinRequest(double latitude, double longitude, int altitude, String username, String password,
+						  String courseName, LocalTime checkinStartTime, LocalTime checkinEndTime)
 	{
 		super();
 		this.latitude = latitude;
@@ -72,7 +72,7 @@ public class CheckinEntry implements Comparable<CheckinEntry>, Serializable
 	 * Sort entries in ascending order of end time
 	 */
 	@Override
-	public int compareTo(CheckinEntry other) 
+	public int compareTo(CheckinRequest other)
 	{
 		if(other == null)
 		{

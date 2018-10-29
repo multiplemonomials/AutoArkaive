@@ -1,6 +1,6 @@
-package com.autoarkaive.checkindata;
+package com.autoarkaive.communications;
 
-public class CheckinResultFailure implements CheckinResult 
+public class ResultFailure
 {
 	/**
 	 * 
@@ -11,12 +11,11 @@ public class CheckinResultFailure implements CheckinResult
 	 */
 	private String failureMessage;
 	
-	public CheckinResultFailure(String failureMessage) 
+	public ResultFailure(String failureMessage)
 	{
 		this.failureMessage = failureMessage;
 	}
 
-	@Override
 	public boolean succeeded() {
 		return false;
 	}

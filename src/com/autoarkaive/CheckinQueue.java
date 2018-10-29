@@ -1,10 +1,11 @@
 package com.autoarkaive;
 
+import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import org.joda.time.LocalTime;
 
-import com.autoarkaive.checkindata.CheckinEntry;
+import com.autoarkaive.communications.CheckinRequest;
 
 /**
  * Stores a queue of Arkaive checkins that need to be performed, and manages
@@ -14,7 +15,7 @@ import com.autoarkaive.checkindata.CheckinEntry;
  */
 public class CheckinQueue 
 {
-	private PriorityBlockingQueue<CheckinEntry> checkinQueue;
+	private PriorityBlockingQueue<CheckinRequest> checkinQueue;
 	private Thread checkinThread;
 	private EmulatorController emulatorController;
 	
@@ -35,10 +36,10 @@ public class CheckinQueue
 	 * 
 	 * Note: if multiple checkins are enqueued at the same time, the one that ends the soonest will be processed first.
 	 * 
-	 * Note
+	 * Note 2: This function is 100% thread safe.
 	 * @param checkin
 	 */
-	public void enqueueCheckin(CheckinEntry checkin)
+	public void enqueueCheckin(CheckinRequest checkin)
 	{
 		if(checkin.checkinStartTime.isAfter(LocalTime.now()))
 		{
@@ -46,6 +47,35 @@ public class CheckinQueue
 		}
 		
 		checkinQueue.put(checkin);
+	}
+	
+	/**
+	 * Tests if the given username and password is a valid login.
+	 * This function queries the device, it may block for quite a while until this completes.
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public boolean testLogin(String username, String password)
+	{
+		// TODO
+		return true;
+	}
+	
+	/**
+	 * Gets the list of courses that the given user has enrolled in on Arkaive, 
+	 * formatted as a map with the course code as the key and the course name as the value.
+	 * Returns an empty map on error.
+	 * This function queries the device, it may block for quite a while until this completes.
+	 * 
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public HashMap<String, String> getClassList(String username, String password)
+	{
+		// TODO
+		return null;
 	}
 	
 	/**
@@ -83,7 +113,7 @@ public class CheckinQueue
 		{
 			while(true)
 			{
-				CheckinEntry currEntry = checkinQueue.take();
+				CheckinRequest currEntry = checkinQueue.take();
 				
 				if(currEntry.checkinEndTime.isAfter(LocalTime.now()))
 				{

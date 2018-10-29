@@ -10,9 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
-import com.autoarkaive.checkindata.CheckinEntry;
-import com.autoarkaive.checkindata.CheckinResult;
-import com.autoarkaive.checkindata.CheckinResultFailure;
+import com.autoarkaive.communications.CheckinRequest;
+import com.autoarkaive.communications.ResultFailure;
+
 
 /**
  * Class to manage AutoArkaive's Android emulator and the aps running on it
@@ -111,19 +111,22 @@ public class EmulatorController
 	 * Execute the given checkin.  Blocks until complete.
 	 * @param checkin
 	 */
-	public void performCheckin(CheckinEntry checkin)
+	public void performCheckin(CheckinRequest checkin)
 	{
 		try
 		{
+			// set mock location
+			emulatorShell.printf("geo fix %.05f %.05f %d\n", checkin.latitude, checkin.longitude, checkin.altitude);
+			
 			appSocketSerializer.writeObject(checkin);
 			
 			// wait for app to (try to) perform the checkin and send back the result
-			CheckinResult result = (CheckinResult) appSocketDeserializer.readObject();
+			Object result = appSocketDeserializer.readObject();
 			
-			if(!result.succeeded())
+			if(result instanceof ResultFailure)
 			{
 				System.err.println("checkin" + checkin.courseName +" for username " + checkin.username + 
-						" failed on device due to error: " + ((CheckinResultFailure)result).getFailureMessage());
+						" failed on device due to error: " + ((ResultFailure)result).getFailureMessage());
 			}
 		} 
 		catch (Exception e) 
