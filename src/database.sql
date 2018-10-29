@@ -14,9 +14,9 @@ CREATE TABLE myUsers (
 CREATE TABLE myClasses(
 	checkinStartTime VARCHAR(300) NOT NULL,
 	checkinEndTime VARCHAR(300) NOT NULL,
-	latitude FLOAT(20,8) NOT NULL, --we can update this based on how precise the api gives us
-	longitude FLOAT(20,8) NOT NULL, -- https://stackoverflow.com/questions/7167604/how-accurately-should-i-store-latitude-and-longitude
-	altitude FLOAT(20,8) NOT NULL,
+	latitude DOUBLE(20,8) NOT NULL, --we can update this based on how precise the api gives us
+	longitude DOUBLE(20,8) NOT NULL, -- https://stackoverflow.com/questions/7167604/how-accurately-should-i-store-latitude-and-longitude
+	altitude INT(50) NOT NULL,
 	courseCode VARCHAR(6) NOT NULL,
 	classname VARCHAR(40) NOT NULL
 );

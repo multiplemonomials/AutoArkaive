@@ -1,6 +1,10 @@
 package com.autoarkaive;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -31,31 +35,49 @@ public class UtilityServlet extends HttpServlet{
 		}
 	}
 	
-	function addClass(request, response) {
+	
+	
+	public void addClass(HttpServletRequest request, HttpServletRequest response) {
 		System.out.println();
 		System.out.println("Adding a new class");
-
-		String user_email = req.getParameter(); //Website should be responsible for this, keep in session
-		String class_name;
-		String arkaive_code;
-
-		Latitude //determine types in database
-		Longitude
-		Altitude
-
-		Days 
-		Hour
-
-
-		try {
-			//Establish database connection
-
-			String query = "Insert Into Classes"
-
+		
+		PreparedStatement ps = null;
+		Connection conn = null;
+		try{
+			
+			conn = Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CalendarInfo?user=root&password=*****&useSSL=false");
+			
+			
+			String insertstatement = "INSERT INTO myClasses(checkinStartTime,checkinEndTime,latitude,longitude,altitude,courseCode,classname) "
+					+ "					VALUES (?,?,?,?,?,?,?)";
+			
+			ps = conn.pepareStatment(insertstatement);
+			ps.setString(1, request.getParameter("checkinStartTime"));
+			ps.setString(2, request.getParameter("checkinEndTime"));
+			ps.setString(3, request.getParameter("latitude"));
+			ps.setString(4, request.getParameter("longitude"));
+			ps.setString(5, request.getParameter("altitude"));
+			ps.setString(6, request.getParameter("courseCode"));
+			ps.setString(7, request.getParameter("classname"));
+			ps.executeUpdate();
+			
+			
+		}catch(SQLException sqle){
+			System.out.println("sqle yo");
+		} finally{
+			try{
+				if(rs != null){
+					rs.close();
+				}
+				if(ps != null){
+					ps.close();
+				}
+			} catch(SQLException sqle){
+				sqle.printStackTrace(); 
+			}
 		}
-		catch() {
 
-		}
 	}
 
 
