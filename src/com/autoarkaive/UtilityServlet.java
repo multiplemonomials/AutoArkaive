@@ -17,22 +17,62 @@ public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
 	function addUser(request, response) {
-		System.out.println();
-		System.out.println("Adding a new class");
+	    System.out.println();
+	    System.out.println("Adding a new class");
 
-		String email;
-		String profile_image;
-		String name;
+	    String fullname = request.getParameter("fullname");
+	    String email = request.getParameter("email");
+
+	    String arkaive_username = request.getParameter("arkaive_username");
+	    String arkaive_password = hash( request.getParameter("arkaive_password") );
+	    String picurl = request.getParameter("picurl");
+
+	    Connection conn = null;
+	    Statement st = null;
+	    PreparedStatement ps = null;
+	    ResultSet rs = null;
 
 		try {
 			//Establish database connection
+		Class.forName("com.mysql.jdbc.Driver");
+		conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&");
+		st = conn.createStatement();
 
-			String query = "Insert Into Users"
+			String query = "Insert Into myUsers (fullname, email, picurl, arkaive_username, arkaive_password)"
+					+ "values (?, ?, ?, ?, ?)";
 
+		//Fill in the question marks
+		preparedStmt.setString (1, fullname);
+		preparedStmt.setString(2, email);
+		preparedStmt.setString (3, picurl);
+		preparedStmt.setString(4, arkaive_username);
+		 preparedStmt.setString(5, arkaive_password);
+
+		// execute the preparedstatement
+		preparedStmt.execute();
 		}
-		catch() {
-
-		}
+	    catch (SQLException sqle) {
+		System.out.println ("SQLException: " + sqle.getMessage());
+	    } catch (ClassNotFoundException cnfe) {
+		System.out.println ("ClassNotFoundException: " + cnfe.getMessage());
+	    } finally {
+			try {
+			    if (rs != null) {
+			    rs.close();
+			    }
+			    if (st != null) {
+			    st.close();
+			    }
+			    if (ps != null) {
+			    ps.close();
+			    }
+			    if (conn != null) {
+			    conn.close();
+			    }
+			} catch (SQLException sqle) {
+				System.out.println("sqle: " + sqle.getMessage());
+			}
+	    }
 	}
 	
 	
