@@ -16,9 +16,21 @@ import javax.servlet.http.HttpServletResponse;
 public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
-	function addUser(request, response) {
+	
+	public void checkUser(HttpServletRequest request, HttpServletRequest response) {
+		//Returns json with true or false value
+		//GsonResponse gr = new GsonResponse();
+		//gr.add(boolean xyz)
+		
+		/* {
+		*.   "arkaiveAccountExists": "true/false"
+		*. }
+		*/
+	}
+	
+	public void addUser(HttpServletRequest request, HttpServletRequest response) {
 	    System.out.println();
-	    System.out.println("Adding a new class");
+	    System.out.println("Adding a new user");
 
 	    String fullname = request.getParameter("fullname");
 	    String email = request.getParameter("email");
