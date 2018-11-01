@@ -17,7 +17,7 @@ public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
 	
-	public void checkUser(HttpServletRequest request, HttpServletRequest response) {
+	public String checkUser(HttpServletRequest request, HttpServletRequest response) {
 		//Returns json with true or false value
 		//GsonResponse gr = new GsonResponse();
 		//gr.add(boolean xyz)
@@ -81,7 +81,7 @@ public class UtilityServlet extends HttpServlet{
 		}
 	}
 	
-	public void addUser(HttpServletRequest request, HttpServletRequest response) {
+	public String addUser(HttpServletRequest request, HttpServletRequest response) {
 	    System.out.println();
 	    System.out.println("Adding a new user");
 
@@ -142,7 +142,7 @@ public class UtilityServlet extends HttpServlet{
 	
 	
 	
-	public void addClass(HttpServletRequest request, HttpServletRequest response) {
+	public String addClass(HttpServletRequest request, HttpServletRequest response) {
 		System.out.println();
 		System.out.println("Adding a new class");
 		
@@ -156,6 +156,24 @@ public class UtilityServlet extends HttpServlet{
 			
 			String insertstatement = "INSERT INTO myClasses(checkinStartTime,checkinEndTime,latitude,longitude,altitude,courseCode,classname) "
 					+ "					VALUES (?,?,?,?,?,?,?)";
+			
+			if((request.getParameter("checkinStartTime")).equals("") || (request.getParameter("checkinStartTime")).equals(null) )
+			   	return "{classWasAdded: false}";
+			else if((request.getParameter("checkinEndTime")).equals("") || (request.getParameter("checkinEndTime")).equals(null) )
+				return "{classWasAdded: false}";
+			else if((request.getParameter("latitude")).equals("") || (request.getParameter("latitude")).equals(null) )
+				return "{classWasAdded: false}";
+			else if((request.getParameter("longitude")).equals("") || (request.getParameter("longitude")).equals(null) )
+				return "{classWasAdded: false}";
+			else if((request.getParameter("altitude")).equals("") || (request.getParameter("altitude")).equals(null) )
+				return "{classWasAdded: false}";
+			else if((request.getParameter("courseCode")).equals("") || (request.getParameter("courseCode")).equals(null) )
+				return "{classWasAdded: false}";
+			else if((request.getParameter("classname")).equals("") || (request.getParameter("classname")).equals(null) )
+				return "{classWasAdded: false}";
+			else
+				System.out.println("Class was added");
+				
 			
 			ps = conn.pepareStatment(insertstatement);
 			ps.setString(1, request.getParameter("checkinStartTime"));
