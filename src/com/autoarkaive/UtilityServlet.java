@@ -21,6 +21,7 @@ public class UtilityServlet extends HttpServlet{
 		//Returns json with true or false value
 		//GsonResponse gr = new GsonResponse();
 		//gr.add(boolean xyz)
+		//return gr.toString() == JSON
 		
 		/* {
 		*.   "arkaiveAccountExists": "true/false"
@@ -34,7 +35,7 @@ public class UtilityServlet extends HttpServlet{
 		//From Sai Allu Assignment 3
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=Sharonhigh2017*&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=uhoi&useSSL=false");
 			st = conn.createStatement();
 			
 			/* Checks if user is in database */
@@ -53,6 +54,9 @@ public class UtilityServlet extends HttpServlet{
 				
 				System.out.println ("Count = " + count);
 			}
+			
+			
+			
 		} catch (SQLException sqle) {
 			System.out.println ("SQLException: " + sqle.getMessage());
 		} catch (ClassNotFoundException cnfe) {
