@@ -55,7 +55,7 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println ("Count = " + count);
 			}
 			
-			
+			return "{ arkaiveAccountExists: " + found + " }"; 
 			
 		} catch (SQLException sqle) {
 			System.out.println ("SQLException: " + sqle.getMessage());
