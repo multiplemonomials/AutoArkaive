@@ -121,8 +121,8 @@ public class UtilityServlet extends HttpServlet{
 	}
 
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		doGet(request, response);
+	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		//doGet(request, response);
 		
 		String command="";
 		String json="";
