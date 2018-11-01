@@ -137,7 +137,18 @@ public class UtilityServlet extends HttpServlet{
 		//doGet(request, response);
 		
 		String command="";
+		command = request.getParameter("command");
+		
 		String json="";
+		
+		if( command.equals("addUser") )
+			addUser(request, response);
+		else if( command.equals("addClass") )
+			addClass(request, response);
+		else if(  command.equals("checkUser") )
+			checkUser(request,response);
+		else
+			System.out.println("Invalid command : " + command);
 	
 		//Parse json and set in the request parameters;
 		//Look up pretty printing if needed, for debugging
