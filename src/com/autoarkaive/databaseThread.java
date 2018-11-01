@@ -12,6 +12,13 @@ import org.joda.time.format.DateTimeFormatter;
 
 public class databaseThread {
 
+	private static CheckinQueue cq = null;
+	
+	public databaseThread() 
+	{
+		cq = new CheckinQueue();
+	}
+	
 	public void run(){
 		//poll database every second
 		//see if there's anyone that needs to be checked in now, using SQL
@@ -57,7 +64,7 @@ public class databaseThread {
 
 				//TODO confirm that we can just pass a string to the object and it will make a jodatime
 				CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,courseName,starttime,endtime);
-				
+				cq.add(cir);
 			}
 			
 				
