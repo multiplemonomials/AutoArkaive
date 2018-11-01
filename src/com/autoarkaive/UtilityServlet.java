@@ -26,6 +26,55 @@ public class UtilityServlet extends HttpServlet{
 		*.   "arkaiveAccountExists": "true/false"
 		*. }
 		*/
+		Connection conn = null;
+		Statement st = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		//From Sai Allu Assignment 3
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=Sharonhigh2017*&useSSL=false");
+			st = conn.createStatement();
+			
+			/* Checks if user is in database */
+			String checkQuery = "SELECT COUNT(email) as count FROM TotalInfo WHERE email=?";
+			PreparedStatement check = conn.prepareStatement(checkQuery);
+			check.setString(1, request.getParameter("email"));
+			rs = check.executeQuery();
+			int count = 0;
+			boolean found = false;
+			
+			while (rs.next()) {
+				count = rs.getInt("count");
+				
+				if(count > 0)
+					found = true;
+				
+				System.out.println ("Count = " + count);
+			}
+		} catch (SQLException sqle) {
+			System.out.println ("SQLException: " + sqle.getMessage());
+		} catch (ClassNotFoundException cnfe) {
+			System.out.println ("ClassNotFoundException: " + cnfe.getMessage());
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (st != null) {
+					st.close();
+				}
+				if (ps != null) {
+					ps.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (SQLException sqle) {
+				System.out.println("sqle: " + sqle.getMessage());
+			}
+		}
 	}
 	
 	public void addUser(HttpServletRequest request, HttpServletRequest response) {
