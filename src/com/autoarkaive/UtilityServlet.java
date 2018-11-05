@@ -39,7 +39,7 @@ public class UtilityServlet extends HttpServlet{
 			st = conn.createStatement();
 			
 			/* Checks if user is in database */
-			String checkQuery = "SELECT COUNT(email) as count FROM TotalInfo WHERE email=?";
+			String checkQuery = "SELECT COUNT(email) as count FROM myUsers WHERE email=?";
 			PreparedStatement check = conn.prepareStatement(checkQuery);
 			check.setString(1, request.getParameter("email"));
 			rs = check.executeQuery();
