@@ -91,6 +91,10 @@ public class UtilityServlet extends HttpServlet{
 	    String arkaive_username = request.getParameter("arkaive_username");
 	    String arkaive_password = hash( request.getParameter("arkaive_password") );
 	    String picurl = request.getParameter("picurl");
+		
+	    if(!testLogin(arkaive_username,arkaive_password)){
+		return "{ isValidArkaiveAccount: false }";    
+	    }
 
 	    Connection conn = null;
 	    Statement st = null;
@@ -138,6 +142,8 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("sqle: " + sqle.getMessage());
 			}
 	    }
+		
+		return "{ isValidArkaiveAccount: true }";
 	}
 	
 	
