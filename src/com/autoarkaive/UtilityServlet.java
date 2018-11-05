@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -16,8 +18,10 @@ import javax.servlet.http.HttpServletResponse;
 public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
+	private static CheckinQueue cq = null;
 	
-	public String checkUser(HttpServletRequest request, HttpServletRequest response) {
+	
+	public String checkUser(HttpServletRequest request, HttpServletResponse response) {
 		//Returns json with true or false value
 		//GsonResponse gr = new GsonResponse();
 		//gr.add(boolean xyz)
@@ -79,9 +83,10 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("sqle: " + sqle.getMessage());
 			}
 		}
+		return "";
 	}
 	
-	public String addUser(HttpServletRequest request, HttpServletRequest response) {
+	public String addUser(HttpServletRequest request, HttpServletResponse response) {
 	    System.out.println();
 	    System.out.println("Adding a new user");
 
@@ -89,7 +94,9 @@ public class UtilityServlet extends HttpServlet{
 	    String email = request.getParameter("email");
 
 	    String arkaive_username = request.getParameter("arkaive_username");
-	    String arkaive_password = hash( request.getParameter("arkaive_password") );
+	   
+	    String arkaive_password = Hashing.get_SHA_1_SecurePassword( request.getParameter("arkaive_password") );
+	    //String arkaive_password = hash( request.getParameter("arkaive_password") );
 	    String picurl = request.getParameter("picurl");
 		
 	    if(!testLogin(arkaive_username,arkaive_password)){
@@ -148,7 +155,7 @@ public class UtilityServlet extends HttpServlet{
 	
 	
 	
-	public String addClass(HttpServletRequest request, HttpServletRequest response) {
+	public String addClass(HttpServletRequest request, HttpServletResponse response) {
 		System.out.println();
 		System.out.println("Adding a new class");
 		
@@ -181,7 +188,7 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("Class was added");
 				
 			
-			ps = conn.pepareStatment(insertstatement);
+			ps = conn.prepareStatement(insertstatement);
 			ps.setString(1, request.getParameter("checkinStartTime"));
 			ps.setString(2, request.getParameter("checkinEndTime"));
 			ps.setString(3, request.getParameter("latitude"));
@@ -208,6 +215,12 @@ public class UtilityServlet extends HttpServlet{
 		}
 
 	}
+	public String fetchClasses(String email){
+		//call database to get the arkaive username and password from teh email
+		//call the class list function
+		//transform into json
+		//return jsonn
+	}
 
 
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -218,12 +231,20 @@ public class UtilityServlet extends HttpServlet{
 		
 		String json="";
 		
+		if(cq == null){
+			cq = new CheckinQueue();
+			databaseThread dbt = new databaseThread(cq);
+			dbt.start();
+		}
+		
 		if( command.equals("addUser") )
 			addUser(request, response);
 		else if( command.equals("addClass") )
 			addClass(request, response);
 		else if(  command.equals("checkUser") )
 			checkUser(request,response);
+		else if( command.equals("fetchclasses"))
+			fetchClasses(request.getParameter("email"));
 		else
 			System.out.println("Invalid command : " + command);
 	

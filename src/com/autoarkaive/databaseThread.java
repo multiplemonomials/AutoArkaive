@@ -10,13 +10,15 @@ import org.joda.time.LocalTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-public class databaseThread {
+import com.autoarkaive.communications.CheckinRequest;
+
+public class databaseThread extends Thread{
 
 	private static CheckinQueue cq = null;
 	
-	public databaseThread() 
+	public databaseThread(CheckinQueue cq) 
 	{
-		cq = new CheckinQueue();
+		this.cq = cq;
 	}
 	
 	public void run(){
