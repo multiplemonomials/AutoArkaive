@@ -215,11 +215,20 @@ public class UtilityServlet extends HttpServlet{
 		}
 
 	}
-	public String fetchClasses(String email){
+	public String fetchClasses(String arkaive_username, String arkaive_password){
 		//call database to get the arkaive username and password from teh email
 		//call the class list function
 		//transform into json
 		//return jsonn
+		HashMap<String,String> classList = getClassList(arkaive_username, arkaive_password);
+		
+		/* Warning: This part probably doesn't work just yet, it depends on Jamie's implementation */
+		/* ArkaiveClass */
+		Collection<ArkaiveClass> finalList = classList.values();
+		for(ArkaiveClass abc : finalList) {
+			gson.add(abc);
+		}
+		
 	}
 
 
