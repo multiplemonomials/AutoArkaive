@@ -1,5 +1,4 @@
 package com.autoarkaive;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -102,7 +101,7 @@ public class UtilityServlet extends HttpServlet{
 	    //String arkaive_password = hash( request.getParameter("arkaive_password") );
 	    String picurl = request.getParameter("picurl");
 		
-	    if(!testLogin(arkaive_username,arkaive_password)){
+	    if(!cq.testLogin(arkaive_username,arkaive_password)){
 		return "{ isValidArkaiveAccount: false }";    
 	    }
 
@@ -164,9 +163,10 @@ public class UtilityServlet extends HttpServlet{
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
+		ResultSet rs= null;
 		try{
 			
-			conn = Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.jdbc.Driver");
 			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CalendarInfo?user=root&password=*****&useSSL=false");
 			
 			
@@ -204,7 +204,9 @@ public class UtilityServlet extends HttpServlet{
 			
 		}catch(SQLException sqle){
 			System.out.println("sqle yo");
-		} finally{
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}finally{
 			try{
 				if(rs != null){
 					rs.close();
@@ -246,7 +248,7 @@ public class UtilityServlet extends HttpServlet{
 			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=uhoi&useSSL=false");
 			st = conn.createStatement();
 			
-			ArrayList<String> userandpass = null;
+			ArrayList<String> userandpass = new ArrayList<String>();
 			
 			/* Checks if user is in database */
 			String checkQuery = "SELECT arkaive_username, arkaive_password FROM myUsers WHERE email=?";
@@ -255,11 +257,16 @@ public class UtilityServlet extends HttpServlet{
 			rs = check.executeQuery();
 			
 			
-			while (rs.next()) {
-				userandpass.add(rs.getString("arkaive_username")) ;
+			if (rs.next()) {
+				userandpass.add(rs.getString("arkaive_username"));
+				userandpass.add(rs.getString("arkaive_password"));
 			}
-			
-			return "{ arkaiveAccountExists: " + found + " }"; 
+			else{
+				userandpass.add("didnotfindusername");
+				userandpass.add("didnotfindpassword");
+			}
+			return userandpass;
+		
 			
 		} catch (SQLException sqle) {
 			System.out.println ("SQLException: " + sqle.getMessage());
@@ -283,6 +290,7 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("sqle: " + sqle.getMessage());
 			}
 		}
+		return null;
 	}
 
 
@@ -300,6 +308,8 @@ public class UtilityServlet extends HttpServlet{
 			dbt.start();
 		}
 		
+		ArrayList<String> userandpass = new ArrayList<String>();
+		
 		if( command.equals("addUser") )
 			addUser(request, response);
 		else if( command.equals("addClass") )
@@ -307,8 +317,10 @@ public class UtilityServlet extends HttpServlet{
 		else if(  command.equals("checkUser") )
 			checkUser(request,response);
 		else if( command.equals("fetchclasses"))
-			
-			fetchClasses(request.getParameter("email"));
+			userandpass = getUsernameAndPassword(request.getParameter("email"));
+			String username = userandpass.get(0);
+			String password = userandpass.get(1);
+			fetchClasses(username, password);
 		else
 			System.out.println("Invalid command : " + command);
 	
