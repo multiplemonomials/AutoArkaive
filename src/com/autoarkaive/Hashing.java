@@ -1,11 +1,12 @@
+package com.autoarkaive;
+//Hashing Algorithm found at: https://github.com/selwakowski/pracainz/blob/master/PracaInz_v01/src/com/howtodoinjava/hashing/password/demo/sha/SHAExample.java
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
- 
- //Hashing Algorithm found at: https://github.com/selwakowski/pracainz/blob/master/PracaInz_v01/src/com/howtodoinjava/hashing/password/demo/sha/SHAExample.java
- 
-public class SHAExample {
-     
+
+public class Hashing {
+    /* 
     public static void main(String[] args) throws NoSuchAlgorithmException
     {
         String passwordToHash = "password";
@@ -13,20 +14,18 @@ public class SHAExample {
          
         String securePassword = get_SHA_1_SecurePassword(passwordToHash, salt);
         System.out.println(securePassword);
-         
-        securePassword = get_SHA_256_SecurePassword(passwordToHash, salt);
-        System.out.println(securePassword);
-         
-        securePassword = get_SHA_384_SecurePassword(passwordToHash, salt);
-        System.out.println(securePassword);
-         
-        securePassword = get_SHA_512_SecurePassword(passwordToHash, salt);
-        System.out.println(securePassword);
     }
- 
-    private static String get_SHA_1_SecurePassword(String passwordToHash, byte[] salt)
+ */
+    public static String get_SHA_1_SecurePassword(String passwordToHash)
     {
-        String generatedPassword = null;
+    	SecureRandom sr;
+    	String generatedPassword = null;
+		try {
+			sr = SecureRandom.getInstance("SHA1PRNG");
+		
+        byte[] salt = new byte[16];
+        sr.nextBytes(salt);
+	
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
             md.update(salt);
@@ -42,24 +41,14 @@ public class SHAExample {
         {
             e.printStackTrace();
         }
-        return generatedPassword;
+		} catch (NoSuchAlgorithmException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return generatedPassword;
+	
     }
-     
-    private static String get_SHA_256_SecurePassword(String passwordToHash, byte[] salt)
-    {
-        //Use MessageDigest md = MessageDigest.getInstance("SHA-256");
-    }
-     
-    private static String get_SHA_384_SecurePassword(String passwordToHash, byte[] salt)
-    {
-        //Use MessageDigest md = MessageDigest.getInstance("SHA-384");
-    }
-     
-    private static String get_SHA_512_SecurePassword(String passwordToHash, byte[] salt)
-    {
-        //Use MessageDigest md = MessageDigest.getInstance("SHA-512");
-    }
-     
+ /*        
     //Add salt
     private static byte[] getSalt() throws NoSuchAlgorithmException
     {
@@ -68,4 +57,5 @@ public class SHAExample {
         sr.nextBytes(salt);
         return salt;
     }
+*/
 }

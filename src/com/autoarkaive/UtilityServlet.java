@@ -7,12 +7,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.gson.Gson;
 
 @WebServlet("/UtilityServlet")
 public class UtilityServlet extends HttpServlet{
@@ -105,7 +108,7 @@ public class UtilityServlet extends HttpServlet{
 
 	    Connection conn = null;
 	    Statement st = null;
-	    PreparedStatement ps = null;
+	    PreparedStatement preparedStmt = null;
 	    ResultSet rs = null;
 
 		try {
@@ -139,8 +142,8 @@ public class UtilityServlet extends HttpServlet{
 			    if (st != null) {
 			    st.close();
 			    }
-			    if (ps != null) {
-			    ps.close();
+			    if (preparedStmt != null) {
+			    	preparedStmt.close();
 			    }
 			    if (conn != null) {
 			    conn.close();
@@ -220,15 +223,66 @@ public class UtilityServlet extends HttpServlet{
 		//call the class list function
 		//transform into json
 		//return jsonn
-		HashMap<String,String> classList = getClassList(arkaive_username, arkaive_password);
 		
-		/* Warning: This part probably doesn't work just yet, it depends on Jamie's implementation */
-		/* ArkaiveClass */
-		Collection<ArkaiveClass> finalList = classList.values();
-		for(ArkaiveClass abc : finalList) {
-			gson.add(abc);
+		//expecting that getClassList will return an arraylist of ArkaiveClass objects
+		
+		ArrayList<ArkaiveClass> finalList = getClassList(arkaive_username, arkaive_password);
+	
+
+		String jsonoutput = new Gson().toJson(finalList);
+		
+		return jsonoutput;		
+	}
+	
+	public ArrayList<String> getUsernameAndPassword(String email){
+		Connection conn = null;
+		Statement st = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		
+		//From Sai Allu Assignment 3
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=uhoi&useSSL=false");
+			st = conn.createStatement();
+			
+			ArrayList<String> userandpass = null;
+			
+			/* Checks if user is in database */
+			String checkQuery = "SELECT arkaive_username, arkaive_password FROM myUsers WHERE email=?";
+			PreparedStatement check = conn.prepareStatement(checkQuery);
+			check.setString(1, email);
+			rs = check.executeQuery();
+			
+			
+			while (rs.next()) {
+				userandpass.add(rs.getString("arkaive_username")) ;
+			}
+			
+			return "{ arkaiveAccountExists: " + found + " }"; 
+			
+		} catch (SQLException sqle) {
+			System.out.println ("SQLException: " + sqle.getMessage());
+		} catch (ClassNotFoundException cnfe) {
+			System.out.println ("ClassNotFoundException: " + cnfe.getMessage());
+		} finally {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (st != null) {
+					st.close();
+				}
+				if (ps != null) {
+					ps.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (SQLException sqle) {
+				System.out.println("sqle: " + sqle.getMessage());
+			}
 		}
-		
 	}
 
 
@@ -253,6 +307,7 @@ public class UtilityServlet extends HttpServlet{
 		else if(  command.equals("checkUser") )
 			checkUser(request,response);
 		else if( command.equals("fetchclasses"))
+			
 			fetchClasses(request.getParameter("email"));
 		else
 			System.out.println("Invalid command : " + command);
