@@ -25,7 +25,7 @@ public class EmulatorController
 	final static private String ANDROID_SDK_PATH = "C:/android-sdk"; 
 	
 	// name of pre-created Android Virtual Device to run
-	final static private String AVD_NAME = "Nexus_5_API_25";
+	final static private String AVD_NAME = "Nexus_6_API_25";
 	
 	// port that emulator's control shell will run on 
 	final static int EMULATOR_SHELL_PORT = 5554;
@@ -61,15 +61,17 @@ public class EmulatorController
 	
 	public EmulatorController()
 	{
+		Process emulatorProcess = null;
+		
 		try 
 		{
 			System.out.println("Starting emulator...");
 			
 			// start emulator
-			new ProcessBuilder(ANDROID_SDK_PATH + "/tools/emulator" + EXE_SUFFIX, "-avd", AVD_NAME, "-port", Integer.toString(EMULATOR_SHELL_PORT)).start();
+			emulatorProcess = new ProcessBuilder(ANDROID_SDK_PATH + "/tools/emulator" + EXE_SUFFIX, "-avd", AVD_NAME, "-port", Integer.toString(EMULATOR_SHELL_PORT)).start();
 			
 			// give it some time to get going
-			Thread.sleep(100);
+			Thread.sleep(10000);
 			
 			// connect to control socket
 			emulatorSocket = new Socket("localhost", EMULATOR_SHELL_PORT);
@@ -87,7 +89,10 @@ public class EmulatorController
 			emulatorShell.println("auth " + authToken);
 			
 			// set up port forwarding so that we can talk to the app
-			emulatorShell.printf("redir add %d:%d\n", AA_APP_PORT);
+			emulatorShell.printf("redir add %d:%d\n", AA_APP_PORT, AA_APP_PORT);
+			
+			System.out.println("Successfully connected to emulator!");
+			System.out.println("Setting up AutoArkaive app...");
 			
 			// TODO: install AA APK & grant accessibility permission
 			// from here: https://stackoverflow.com/questions/46899547/granting-accessibility-service-permission-for-debug-purposes
@@ -104,6 +109,11 @@ public class EmulatorController
 		{
 			System.err.printf("Caught %s during EmulatorController starup: %s\n", e.getClass().getSimpleName(), e.getMessage());
 			e.printStackTrace();
+			
+			if(emulatorProcess != null)
+			{
+				emulatorProcess.destroy();
+			}
 		}
 	}
 	

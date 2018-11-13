@@ -1,5 +1,7 @@
 import org.joda.time.LocalTime;
 
+import com.autoarkaive.communications.CheckinRequest;
+
 public class checkInQueueTester {
 	
 	public static void main(String[] args){
