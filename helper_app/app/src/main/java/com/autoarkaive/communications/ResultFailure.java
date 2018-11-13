@@ -16,10 +16,6 @@ public class ResultFailure
 		this.failureMessage = failureMessage;
 	}
 
-	public boolean succeeded() {
-		return false;
-	}
-	
 	public String getFailureMessage()
 	{
 		return failureMessage;

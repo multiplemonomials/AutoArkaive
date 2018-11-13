@@ -4,15 +4,17 @@ import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import com.autoarkaive.communications.CheckinRequest;
-import com.autoarkaive.communications.ClassListRequest;
-import com.autoarkaive.communications.LoginCheckRequest;
-import com.autoarkaive.communications.ResultFailure;
+import com.autoarkaive.communications.*;
 import com.moba11y.androida11yutils.A11yNodeInfo;
+import eu.chainfire.libsuperuser.Shell;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Service which controls the Arkaive app UI
@@ -22,6 +24,9 @@ public class AAService extends AccessibilityService
 	private final String TAG = "AAService";
 
 	public static final int FOREGROUND_SERVICE_ID = 101;
+
+	// regex for reading the enrollment code out of the UI
+	public Pattern enrollmentCodePattern = Pattern.compile("Enrollment Code: (\\w+)");
 
 	// enum used to keep track of the service's state, e.g. which UI screen is currently showing or whether or not there was an error
 	enum State
@@ -46,6 +51,15 @@ public class AAService extends AccessibilityService
 	private boolean errorInRequest = false;
 	// stores failure message when in the FAILED state
 	private String failureMessage = null;
+
+	// index of the course that we are currently clicking on in the course selection menu
+	int checkingCourseIndex = 0;
+
+	// number of courses that were found on the courses screen
+	int numCourses = 0;
+
+	// list of classes being built for a class list request
+	ArrayList<ArkaiveClass> classList = new ArrayList<>();
 
 	// when a request is active, it's stored in the corresponding variable
 	private CheckinRequest checkinRequest;
@@ -73,17 +87,27 @@ public class AAService extends AccessibilityService
 		return START_STICKY;
 	}
 
+	private void setState(State state)
+	{
+		Log.i(TAG, "Set state: " + state.toString());
+		this.state = state;
+	}
+
 	@Override
 	protected void onServiceConnected()
 	{
 		super.onServiceConnected();
 		Log.d(TAG, "onServiceConnected() called");
 
+		setState(State.EXECUTING);
+
 		// for testing
 		//checkin = new CheckinRequest(0, 0, 0, "smit109@usc.edu", "xxxxxxxx", "Principles of Software Development", null, null);
-		state = State.EXECUTING;
-		requestType = RequestType.LOGIN_CHECK;
-		loginCheckRequest = new LoginCheckRequest("smit109@usc.edu", "xxxxxxxx");
+		//requestType = RequestType.LOGIN_CHECK;
+		//loginCheckRequest = new LoginCheckRequest("smit109@usc.edu", "xxxxxxxx");
+
+		requestType = RequestType.CLASS_LIST;
+		classListRequest = new ClassListRequest("smit109@usc.edu", "xxxxxxx");
 
 	}
 
@@ -115,22 +139,33 @@ public class AAService extends AccessibilityService
 			case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
 			case AccessibilityEvent.TYPE_VIEW_FOCUSED:
 			case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-			case AccessibilityEvent.TYPE_VIEW_SCROLLED:
 				Log.d(TAG, "Caught accessibility event: " + event.toString());
 				Log.d(TAG, "New UI has been created: ");
-				Log.d(TAG, A11yNodeInfo.wrap(event.getSource()).toViewHeirarchy());
+
+				String[] logLines = A11yNodeInfo.wrap(event.getSource()).toViewHeirarchy().split("\n");
+				for(String line : logLines)
+				{
+					Log.d(TAG, line);
+				}
 				onScreenLoad(A11yNodeInfo.wrap(event.getSource()));
 				break;
 			default: {
 				Log.i(TAG, "Caught accessibility event: " + event.toString());
-				if(event.getSource() != null)
-				{
-					//Log.d(TAG, A11yNodeInfo.wrap(event.getSource()).toViewHeirarchy());
-				}
+				//if(event.getSource() != null)
+				//{
+				//	Log.d(TAG, A11yNodeInfo.wrap(event.getSource()).toViewHeirarchy());
+				//}
 			}
 		}
 
-		event.recycle();
+		try
+		{
+			event.recycle();
+		}
+		catch(IllegalStateException ex)
+		{
+			// this happens sometimes... not sure what to do about it but it can probly be ignored
+		}
     }
 
 
@@ -140,112 +175,210 @@ public class AAService extends AccessibilityService
 	 */
 	private void onScreenLoad(A11yNodeInfo rootNode)
 	{
+
+
 		try
 		{
-			if(rootNode.getChildCount() > 0) // wait for the app to add children
+			ArkaiveUIScreen currentScreen = ArkaiveUIScreen.detectUIScreen(rootNode);
+
+			if(currentScreen != null)
 			{
-				ArkaiveUIScreen currentScreen = ArkaiveUIScreen.detectUIScreen(rootNode);
+				Log.i(TAG, "Matched UI screen: " + currentScreen.toString());
+			}
 
-				if(currentScreen != null)
-				{
-					Log.i(TAG, "Matched UI screen: " + currentScreen.toString());
-				}
+			if(state == State.IDLE || state == State.DONE)
+			{
+				// do nothing
+				return;
+			}
 
-				if(currentScreen == ArkaiveUIScreen.LOGIN)
+			if(currentScreen == ArkaiveUIScreen.LOGIN)
+			{
+				if(state == State.EXECUTING)
 				{
-					if(state == State.EXECUTING)
+					Log.i(TAG, "Logging in...");
+
+					A11yNodeInfo layout;
+					if(rootNode.getChild(0).getChildCount() > 0)
 					{
-						Log.i(TAG, "Logging in...");
+						layout = rootNode.getChild(0).getChild(0);
+					}
+					else
+					{
+						layout = rootNode.getChild(0);
+					}
 
-						A11yNodeInfo layout;
-						if(rootNode.getChild(0).getChildCount() > 0)
-						{
-							layout = rootNode.getChild(0).getChild(0);
-						}
-						else
-						{
-							layout = rootNode.getChild(0);
-						}
+					A11yNodeInfo usernameText = layout.getChild(1);
+					A11yNodeInfo passwordText = layout.getChild(2);
+					A11yNodeInfo loginButton = layout.getChild(3);
 
-						A11yNodeInfo usernameText = layout.getChild(1);
-						A11yNodeInfo passwordText = layout.getChild(2);
-						A11yNodeInfo loginButton = layout.getChild(3);
+					// figure out credentials
+					String username = null, password = null;
+					if(requestType == RequestType.CHECKIN)
+					{
+						username = checkinRequest.username;
+						password = checkinRequest.password;
+					}
+					else if(requestType == RequestType.CLASS_LIST)
+					{
+						username = classListRequest.username;
+						password = classListRequest.password;
+					}
+					else if(requestType == RequestType.LOGIN_CHECK)
+					{
+						username = loginCheckRequest.username;
+						password = loginCheckRequest.password;
+					}
 
-						// figure out credentials
-						String username = null, password = null;
+					// type in login info
+					Bundle usernameArgs = new Bundle();
+					usernameArgs.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, username);
+					usernameText.getAccessibilityNodeInfoCompat().performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, usernameArgs);
+
+					Bundle passwordArgs = new Bundle();
+					passwordArgs.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, password);
+					passwordText.getAccessibilityNodeInfoCompat().performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, passwordArgs);
+
+					// now, hit it!
+					loginButton.performAction(A11yNodeInfo.Actions.CLICK);
+				}
+			}
+			else if(currentScreen == ArkaiveUIScreen.LOGIN_ERROR)
+			{
+				Log.i(TAG, "Login failed");
+
+				// click OK
+				A11yNodeInfo okButton = rootNode.getChild(2).getChild(0);
+				okButton.performAction(A11yNodeInfo.Actions.CLICK);
+
+				// this username and password don't work!
+				failureMessage = "Incorrect Arkaive login information";
+				errorInRequest = true;
+				setState(State.DONE);
+			}
+			else if(currentScreen == ArkaiveUIScreen.OPTIONS_MENU)
+			{
+				if(state == State.LOGOUT)
+				{
+					Log.i(TAG, "Logging out...");
+
+					// log out!
+					A11yNodeInfo signoutButton = rootNode.getChild(0).getChild(0);
+					signoutButton.performAction(A11yNodeInfo.Actions.CLICK);
+
+					setState(State.DONE);
+				}
+			}
+			else if(currentScreen == ArkaiveUIScreen.COURSE_SELECTION)
+			{
+				// if we're doing a login check, we're done!
+				if(requestType == RequestType.LOGIN_CHECK)
+				{
+					Log.i(TAG, "Done with login check, going to logout");
+					setState(State.LOGOUT);
+				}
+				else if(requestType == RequestType.CLASS_LIST || requestType == RequestType.CHECKIN)
+				{
+					// find course list node
+					A11yNodeInfo drawerLayout = rootNode.getChild(rootNode.getChildCount() - 1);
+					A11yNodeInfo relativeLayout = drawerLayout.getChild(0);
+					A11yNodeInfo courseListNode = relativeLayout.getChild(0);
+
+
+					int numCourses = courseListNode.getChildCount() - 2;
+
+					if(checkingCourseIndex >= numCourses)
+					{
+						Log.i(TAG, "Done listing " + numCourses + " courses!");
+
+						// done looking through all courses
+						state = State.LOGOUT;
 						if(requestType == RequestType.CHECKIN)
 						{
-							username = checkinRequest.username;
-							password = checkinRequest.password;
+							errorInRequest = true;
+							failureMessage = "Failed to find requested class in Arkaive app";
 						}
 						else if(requestType == RequestType.CLASS_LIST)
 						{
-							username = classListRequest.username;
-							password = classListRequest.password;
+							Log.i(TAG, "Got classes: " + classList.toString());
 						}
-						else if(requestType == RequestType.LOGIN_CHECK)
-						{
-							username = loginCheckRequest.username;
-							password = loginCheckRequest.password;
-						}
+					}
+					else
+					{
+						Log.i(TAG, "Clicking on course " + checkingCourseIndex);
 
-						// type in login info
-						Bundle usernameArgs = new Bundle();
-						usernameArgs.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, username);
-						usernameText.getAccessibilityNodeInfoCompat().performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, usernameArgs);
-
-						Bundle passwordArgs = new Bundle();
-						passwordArgs.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, password);
-						passwordText.getAccessibilityNodeInfoCompat().performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, passwordArgs);
-
-						// now, hit it!
-						loginButton.performAction(A11yNodeInfo.Actions.CLICK);
+						A11yNodeInfo courseEntry = courseListNode.getChild(checkingCourseIndex + 1);
+						courseEntry.performAction(A11yNodeInfo.Actions.CLICK);
 					}
 				}
-				else if(currentScreen == ArkaiveUIScreen.LOGIN_ERROR)
+
+				// log the user out now that we have the opportunity
+				if(state == State.LOGOUT)
 				{
-					Log.i(TAG, "Login failed");
-
-					// click OK
-					A11yNodeInfo okButton = rootNode.getChild(2).getChild(0);
-					okButton.performAction(A11yNodeInfo.Actions.CLICK);
-
-					// this username and password don't work!
-					failureMessage = "Incorrect Arkaive login information";
-					errorInRequest = true;
-					state = State.DONE;
-				}
-				else if(currentScreen == ArkaiveUIScreen.OPTIONS_MENU)
-				{
-					if(state == State.LOGOUT)
-					{
-						Log.i(TAG, "Logging out...");
-
-						// log out!
-						A11yNodeInfo signoutButton = rootNode.getChild(0).getChild(0);
-						signoutButton.performAction(A11yNodeInfo.Actions.CLICK);
-
-						state = State.DONE;
-					}
-				}
-				else if(currentScreen == ArkaiveUIScreen.COURSE_SELECTION)
-				{
-					// if we're doing a login check, we're done!
-					if(requestType == RequestType.LOGIN_CHECK)
-					{
-						Log.i(TAG, "Done with login check, going to logout");
-						state = State.LOGOUT;
-					}
-
-					// log the user out now that we have the opportunity
-					if(state == State.LOGOUT)
-					{
-						// click on More Options
-						A11yNodeInfo menuButton = rootNode.getChild(2);
-						menuButton.performAction(A11yNodeInfo.Actions.CLICK);
-					}
+					// click on More Options
+					A11yNodeInfo menuButton = rootNode.getChild(2);
+					menuButton.performAction(A11yNodeInfo.Actions.CLICK);
 				}
 			}
+			else if(currentScreen == ArkaiveUIScreen.COURSE_ACTIVITY)
+			{
+				// read out class name and enrollment code
+				A11yNodeInfo drawerLayout = rootNode.getChild(rootNode.getChildCount() - 1);
+				A11yNodeInfo relativeLayout = drawerLayout.getChild(0);
+
+				// find the ScrollView child of relativeLayout, because its children can be in varying orders
+				A11yNodeInfo scrollView = null;
+				for(int index = 0; index < relativeLayout.getChildCount(); ++index)
+				{
+					if(relativeLayout.getChild(index).getClassName().contains("ScrollView"))
+					{
+						scrollView = relativeLayout.getChild(index);
+					}
+				}
+
+				A11yNodeInfo innerRelativeLayout = scrollView.getChild(0);
+				String courseName = innerRelativeLayout.getChild(0).getTextAsString();
+
+				String enrollmentCodeText = innerRelativeLayout.getChild(4).getTextAsString();
+				Log.i(TAG, enrollmentCodeText);
+				Matcher enrollmentCodeMatcher = enrollmentCodePattern.matcher(enrollmentCodeText);
+
+				if(!enrollmentCodeMatcher.matches())
+				{
+					Log.w(TAG,"Unable to match enrollment code string!");
+					return;
+				}
+
+				String enrollmentCode = enrollmentCodeMatcher.group(1);
+
+				Log.i(TAG, "Found course " + courseName + " with code " + enrollmentCode);
+
+				boolean moveToNextCourse = false;
+
+				if(requestType == RequestType.CLASS_LIST)
+				{
+					ArkaiveClass classEntry = new ArkaiveClass();
+					classEntry.courseCode = enrollmentCode;
+					classEntry.className = courseName;
+
+					if(!classList.contains(classEntry))
+					{
+						// we haven't seen this course before
+						classList.add(classEntry);
+						moveToNextCourse = true;
+					}
+
+
+				}
+
+				if(moveToNextCourse)
+				{
+					// move to the next course and go back
+					checkingCourseIndex++;
+					performGlobalAction(GLOBAL_ACTION_BACK);
+				}
+			}
+
 		}
 		catch(Exception ex)
 		{
@@ -275,15 +408,23 @@ public class AAService extends AccessibilityService
 						// start Arkaive app
 
 						state = State.EXECUTING;
+
+						// reset all state machine variables
 						errorInRequest = false;
 						failureMessage = "";
+						checkingCourseIndex = 0;
+						classList.clear();
+
 						break;
 
+
 					case EXECUTING:
+
 						// spinlock until the UI actions have finished
 						Thread.sleep(50);
 
 						break;
+
 
 					case DONE:
 						if(errorInRequest)
