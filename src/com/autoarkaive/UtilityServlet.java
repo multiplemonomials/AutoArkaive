@@ -322,14 +322,15 @@ public class UtilityServlet extends HttpServlet{
 			String password = userandpass.get(1);
 			fetchClasses(username, password);
 		else if( command.equals("test") ) {
-			response.getContentType("text/xml");
-			response.setCharacterEncoding("UTF-8");
+			response.getContentType("application/json");
+			response.setCharacterEncoding("utf-8");
 			PrintWriter out = response.getWriter();
-			out.print("TEST");
+			out.print(new Gson().toJson("{test: false}"));
 		}
 		else
 			System.out.println("Invalid command : " + command);
-	
+
+		
 		//Parse json and set in the request parameters;
 		//Look up pretty printing if needed, for debugging
 	
