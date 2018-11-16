@@ -321,6 +321,12 @@ public class UtilityServlet extends HttpServlet{
 			String username = userandpass.get(0);
 			String password = userandpass.get(1);
 			fetchClasses(username, password);
+		else if( command.equals("test") ) {
+			response.getContentType("text/xml");
+			response.setCharacterEncoding("UTF-8");
+			PrintWriter out = response.getWriter();
+			out.print("TEST");
+		}
 		else
 			System.out.println("Invalid command : " + command);
 	
