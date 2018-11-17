@@ -1,5 +1,6 @@
 package com.autoarkaive;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
 
@@ -72,7 +73,7 @@ public class CheckinQueue
 	 * @param password
 	 * @return
 	 */
-	public HashMap<String, String> getClassList(String username, String password)
+	public ArrayList<ArkaiveClass> getClassList(String username, String password)
 	{
 		// TODO
 		return null;
