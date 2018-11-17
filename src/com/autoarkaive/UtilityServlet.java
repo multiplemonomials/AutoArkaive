@@ -22,7 +22,9 @@ public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
 	private static CheckinQueue cq = null;
-	
+	private static String username = "root";
+	private static String password = "root";
+	private static String databaseName = "arkaiveInfo";
 	
 	public String checkUser(HttpServletRequest request, HttpServletResponse response) {
 		//Returns json with true or false value
@@ -42,7 +44,7 @@ public class UtilityServlet extends HttpServlet{
 		//From Sai Allu Assignment 3
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=uhoi&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=root&password=uhoi&useSSL=false");
 			st = conn.createStatement();
 			
 			/* Checks if user is in database */
