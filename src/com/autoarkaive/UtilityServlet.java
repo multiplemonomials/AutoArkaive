@@ -311,16 +311,17 @@ public class UtilityServlet extends HttpServlet{
 		ArrayList<String> userandpass = new ArrayList<String>();
 		
 		if( command.equals("addUser") )
-			addUser(request, response);
+			json = addUser(request, response);
 		else if( command.equals("addClass") )
-			addClass(request, response);
+			json = addClass(request, response);
 		else if(  command.equals("checkUser") )
-			checkUser(request,response);
-		else if( command.equals("fetchclasses"))
+			json = checkUser(request,response);
+		else if( command.equals("fetchclasses")) {
 			userandpass = getUsernameAndPassword(request.getParameter("email"));
 			String username = userandpass.get(0);
 			String password = userandpass.get(1);
-			fetchClasses(username, password);
+			json = fetchClasses(username, password);
+		}
 		else if( command.equals("test") ) {
 			response.getContentType("application/json");
 			response.setCharacterEncoding("utf-8");
@@ -333,7 +334,11 @@ public class UtilityServlet extends HttpServlet{
 		
 		//Parse json and set in the request parameters;
 		//Look up pretty printing if needed, for debugging
-	
+		response.getContentType("application/json");
+		response.setCharacterEncoding("utf-8");
+		PrintWriter out = response.getWriter();
+		out.print(new Gson().toJson(json));
+		
 		//Forward to appropriate method;
 	}
 
