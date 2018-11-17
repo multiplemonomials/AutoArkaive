@@ -1,3 +1,4 @@
+/*
 package com.autoarkaive;
 
 public class checkinThread {
@@ -10,3 +11,4 @@ public class checkinThread {
 	
 
 }
+*/

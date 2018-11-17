@@ -1,5 +1,6 @@
 package com.autoarkaive;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -218,7 +219,7 @@ public class UtilityServlet extends HttpServlet{
 				sqle.printStackTrace(); 
 			}
 		}
-
+		return "";
 	}
 	public String fetchClasses(String arkaive_username, String arkaive_password){
 		//call database to get the arkaive username and password from teh email
