@@ -1,12 +1,16 @@
 package com.autoarkaive;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.joda.time.LocalTime;
 
+import com.autoarkaive.communications.ArkaiveClass;
 import com.autoarkaive.communications.CheckinRequest;
+import com.autoarkaive.communications.ClassListRequest;
+import com.autoarkaive.communications.LoginCheckRequest;
 
 /**
  * Stores a queue of Arkaive checkins that need to be performed, and manages
@@ -19,6 +23,7 @@ public class CheckinQueue
 	private PriorityBlockingQueue<CheckinRequest> checkinQueue;
 	private Thread checkinThread;
 	private EmulatorController emulatorController;
+	private Lock emulatorLock;
 	
 	/**
 	 * Construct checkin queue.  Starts up the Android emulator.
@@ -27,6 +32,7 @@ public class CheckinQueue
 	{
 		checkinQueue = new PriorityBlockingQueue<>();
 		emulatorController = new EmulatorController();
+		emulatorLock = new ReentrantLock();
 		
 		checkinThread = new Thread(this::checkinLoop);
 		checkinThread.start();
@@ -59,8 +65,10 @@ public class CheckinQueue
 	 */
 	public boolean testLogin(String username, String password)
 	{
-		// TODO
-		return true;
+		emulatorLock.lock();
+		boolean result = emulatorController.testLogin(new LoginCheckRequest(username, password));
+		emulatorLock.unlock();
+		return result;
 	}
 	
 	/**
@@ -75,7 +83,9 @@ public class CheckinQueue
 	 */
 	public ArrayList<ArkaiveClass> getClassList(String username, String password)
 	{
-		// TODO
+		emulatorLock.lock();
+		ArrayList<ArkaiveClass> classList = emulatorController.listClasses(new ClassListRequest(username, password));
+		emulatorLock.unlock();
 		return null;
 	}
 	
@@ -119,11 +129,13 @@ public class CheckinQueue
 				if(currEntry.checkinEndTime.isAfter(LocalTime.now()))
 				{
 					//oh no! we're too late
-					System.err.println("Error: checkin load too high: missed checkin \"" + currEntry.courseName +"\" for username " + currEntry.username);
+					System.err.println("Error: checkin load too high: missed checkin \"" + currEntry.course +"\" for username " + currEntry.username);
 				}
 				else
 				{
+					emulatorLock.lock();
 					emulatorController.performCheckin(currEntry);
+					emulatorLock.unlock();
 				}
 			}
 		}

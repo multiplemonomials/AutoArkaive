@@ -1,6 +1,8 @@
 package com.autoarkaive.communications;
 
-public class ResultSuccess
+import java.io.Serializable;
+
+public class ResultSuccess implements Serializable
 {
 
 	/**

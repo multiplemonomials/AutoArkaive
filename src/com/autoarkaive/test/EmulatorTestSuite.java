@@ -1,8 +1,7 @@
 package com.autoarkaive.test;
 
-import java.util.Scanner;
-
 import com.autoarkaive.EmulatorController;
+import com.autoarkaive.communications.LoginCheckRequest;
 
 /**
  * Class used to test the emulator manipulation code
@@ -12,19 +11,49 @@ import com.autoarkaive.EmulatorController;
 public class EmulatorTestSuite
 {
 	
-	private static Scanner inputScanner;
-	
-	private static void testLaunch()
-	{
-		EmulatorController emulator = new EmulatorController();
-		inputScanner.next();
-	}
-
 	public static void main(String[] args)
 	{
-		inputScanner = new Scanner(System.in);
+		// to the tester: fill in your login here (and don't forget to remove before committing)
+		String realArkaiveLogin = "smit109@usc.edu";
+		String realArkaivePassword = "xxxxxx";
 		
-		testLaunch();
+		
+		// test 1: startup
+		System.out.println(">>> Starting Emulator...");
+		EmulatorController emulator = new EmulatorController();
+		
+		// test 2: correct login check
+		System.out.println(">>> Testing Correct Login...");
+		boolean correctLoginResult = emulator.testLogin(new LoginCheckRequest(realArkaiveLogin, realArkaivePassword));
+		
+		if(correctLoginResult)
+		{
+			System.out.println(">>> Passed!");
+		}
+		else
+		{
+			System.out.println(">>> Failed!");
+		}
+		
+		// test 2: incorrect login check
+		System.out.println(">>> Testing Correct Login...");
+		boolean incorrectLoginResult = emulator.testLogin(new LoginCheckRequest(realArkaiveLogin, "notarealpassword"));
+		
+		if(correctLoginResult)
+		{
+			System.out.println(">>> Passed!");
+		}
+		else
+		{
+			System.out.println(">>> Failed!");
+		}
+		
+		// test 2: incorrect login check
+		//System.out.println(">>> Testing Class Listing...");
+		//ArrayList<ArkaiveClass> classes = emulator.listClasses(new ClassListRequest("smit109@usc.edu", realArkaivePassword));
+		//System.out.println(">>> Class list: " + classes.toString());
+		
+		emulator.shutdown();
 	}
 
 }

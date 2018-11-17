@@ -32,9 +32,9 @@ public class CheckinRequest implements Comparable<CheckinRequest>, Serializable
 	public final String username, password;
 	
 	/**
-	 * Name of course (must match what is displayed in app)
+	 * Course to check in on
 	 */
-	public final String courseName;
+	public final ArkaiveClass course;
 	
 	/**
 	 * Time window where checkin can occur.
@@ -52,10 +52,10 @@ public class CheckinRequest implements Comparable<CheckinRequest>, Serializable
 	 * @param altitude
 	 * @param username
 	 * @param password
-	 * @param courseName
+	 * @param course
 	 */
 	public CheckinRequest(double latitude, double longitude, int altitude, String username, String password,
-						  String courseName, LocalTime checkinStartTime, LocalTime checkinEndTime)
+						  ArkaiveClass course, LocalTime checkinStartTime, LocalTime checkinEndTime)
 	{
 		super();
 		this.latitude = latitude;
@@ -63,7 +63,7 @@ public class CheckinRequest implements Comparable<CheckinRequest>, Serializable
 		this.altitude = altitude;
 		this.username = username;
 		this.password = password;
-		this.courseName = courseName;
+		this.course = course;
 		this.checkinStartTime = checkinStartTime;
 		this.checkinEndTime = checkinEndTime;
 	}

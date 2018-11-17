@@ -1,6 +1,8 @@
 package com.autoarkaive.communications;
 
-public class ResultFailure
+import java.io.Serializable;
+
+public class ResultFailure implements Serializable
 {
 	/**
 	 * 
@@ -16,10 +18,6 @@ public class ResultFailure
 		this.failureMessage = failureMessage;
 	}
 
-	public boolean succeeded() {
-		return false;
-	}
-	
 	public String getFailureMessage()
 	{
 		return failureMessage;

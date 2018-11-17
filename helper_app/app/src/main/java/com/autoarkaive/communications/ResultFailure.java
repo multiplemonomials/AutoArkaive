@@ -1,6 +1,8 @@
 package com.autoarkaive.communications;
 
-public class ResultFailure
+import java.io.Serializable;
+
+public class ResultFailure implements Serializable
 {
 	/**
 	 * 

@@ -1,9 +1,11 @@
 package com.autoarkaive.communications;
 
+import java.io.Serializable;
+
 /**
  * Request to check if a given Arkaive username and password work.
  */
-public class LoginCheckRequest
+public class LoginCheckRequest implements Serializable
 {
 	/**
 	 * Arkaive login info

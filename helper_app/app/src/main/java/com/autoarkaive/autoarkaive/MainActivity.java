@@ -19,12 +19,11 @@ public class MainActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
 		// start the accessibility service
 		startService(new Intent(this, AAService.class));
 		Toast.makeText(this, "Service started!", Toast.LENGTH_SHORT).show();
 
-		//startActivity(sSettingsIntent);
+
     }
 
 	@Override

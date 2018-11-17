@@ -102,16 +102,6 @@ public class AAService extends AccessibilityService
 				.build();
 		startForeground(FOREGROUND_SERVICE_ID, notification);
 
-		// create socket
-		try
-		{
-			acceptorSocket = new ServerSocket(PORT);
-		}
-		catch(IOException ex)
-		{
-			ex.printStackTrace();
-		}
-
 		return START_STICKY;
 	}
 
@@ -128,6 +118,20 @@ public class AAService extends AccessibilityService
 		Log.d(TAG, "onServiceConnected() called");
 
 		setState(State.IDLE);
+
+		// create socket
+		try
+		{
+			acceptorSocket = new ServerSocket(PORT);
+		}
+		catch(IOException ex)
+		{
+			ex.printStackTrace();
+		}
+
+		// start a new controller thread
+		controllerThread = new Thread(new CheckinControllerThread());
+		controllerThread.start();
 
 		// for testing
 		//checkinRequest = new CheckinRequest(0, 0, 0, "smit109@usc.edu", "xxxxxxx", new ArkaiveClass("", "QN7K"), null, null);
@@ -500,13 +504,14 @@ public class AAService extends AccessibilityService
 	}
 
 	// thread which monitors the socket to the server, kicks off checkins, and reports the results back to the server
-	private class CheckinControllerThread
+	private class CheckinControllerThread implements Runnable
 	{
 		public void run()
 		{
 			// wait for server to connect
 			try
 			{
+				Log.v(TAG, "Waiting for server connection...");
 				serverSocket = acceptorSocket.accept();
 				requestStream = new ObjectInputStream(serverSocket.getInputStream());
 				resultStream = new ObjectOutputStream(serverSocket.getOutputStream());
@@ -518,60 +523,99 @@ public class AAService extends AccessibilityService
 
 			try
 			{
-				switch(state)
+				while(!Thread.interrupted())
 				{
-					case IDLE:
-						// wait for next request from server
-						//Object request = requestStream.readObject();
+					switch(state)
+					{
+						case IDLE:
+							// wait for next request from server
+							Log.v(TAG, "Waiting for request from server");
+							Object request = requestStream.readObject();
 
-						// start Arkaive app
-						Intent arkaiveIntent = new Intent(Intent.ACTION_VIEW);
-						arkaiveIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-						arkaiveIntent.setComponent(new ComponentName("com.arkaive.arkaive", "com.arkaive.arkaive.HomeActivity"));
-						arkaiveIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-						startActivity(arkaiveIntent);
+							if(request instanceof CheckinRequest)
+							{
+								requestType = RequestType.CHECKIN;
+								checkinRequest = (CheckinRequest) request;
+							}
+							else if(request instanceof ClassListRequest)
+							{
+								requestType = RequestType.CLASS_LIST;
+								classListRequest = (ClassListRequest) request;
+							}
+							else if(request instanceof LoginCheckRequest)
+							{
+								requestType = RequestType.LOGIN_CHECK;
+								loginCheckRequest = (LoginCheckRequest) request;
+							}
+							else
+							{
+								throw new RuntimeException("Unknown request type received!");
+							}
 
-						setState(State.EXECUTING);
+							setState(State.EXECUTING);
 
-						// reset all state machine variables
-						errorInRequest = false;
-						failureMessage = "";
-						checkingCourseIndex = 0;
-						classList.clear();
-						correctCourseFound = false;
+							// start Arkaive app
+							Intent arkaiveIntent = new Intent(Intent.ACTION_VIEW);
+							arkaiveIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+							arkaiveIntent.setComponent(new ComponentName("com.arkaive.arkaive", "com.arkaive.arkaive.HomeActivity"));
+							arkaiveIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+							startActivity(arkaiveIntent);
 
-						break;
+							// reset all state machine variables
+							errorInRequest = false;
+							failureMessage = "";
+							checkingCourseIndex = 0;
+							classList.clear();
+							correctCourseFound = false;
+
+							break;
 
 
-					case EXECUTING:
+						case EXECUTING:
 
-						// spinlock until the UI actions have finished
-						Thread.sleep(50);
+							// spinlock until the UI actions have finished
+							Thread.sleep(50);
 
-						break;
+							break;
 
 
-					case DONE:
-						if(errorInRequest)
-						{
-							// report failure to server
-							ResultFailure failureResult = new ResultFailure(failureMessage);
-							resultStream.writeObject(failureResult);
-						}
-						else
-						{
-							// report success to server
-							ResultSuccess successResult = new ResultSuccess();
-							resultStream.writeObject(successResult);
-						}
-						break;
+						case DONE:
+							Log.v(TAG, "Sending DONE result...");
+							if(errorInRequest)
+							{
+								// report failure to server
+								ResultFailure failureResult = new ResultFailure(failureMessage);
+								resultStream.writeObject(failureResult);
+							}
+							else
+							{
+								if(requestType == RequestType.CLASS_LIST)
+								{
+									// return class list
+									ResultClassList classListResult = new ResultClassList(classList);
+									resultStream.writeObject(classListResult);
+								}
+								else
+								{
+									// report success to server
+									ResultSuccess successResult = new ResultSuccess();
+									resultStream.writeObject(successResult);
+								}
+
+							}
+							resultStream.flush();
+
+							setState(State.IDLE);
+
+							break;
+					}
 				}
 			}
 			catch(InterruptedException ex)
 			{
 				// do nothing
 			}
-			catch(IOException /*| ClassNotFoundException */e)
+			catch(IOException | ClassNotFoundException e)
 			{
 				e.printStackTrace();
 			}
