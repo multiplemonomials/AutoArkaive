@@ -1,6 +1,7 @@
 package com.autoarkaive.autoarkaive;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -23,7 +24,7 @@ public class MainActivity extends Activity
 		startService(new Intent(this, AAService.class));
 		Toast.makeText(this, "Service started!", Toast.LENGTH_SHORT).show();
 
-		startActivity(sSettingsIntent);
+		//startActivity(sSettingsIntent);
     }
 
 	@Override

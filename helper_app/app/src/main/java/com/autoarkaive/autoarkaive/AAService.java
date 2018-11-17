@@ -2,6 +2,7 @@ package com.autoarkaive.autoarkaive;
 
 import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +12,11 @@ import com.autoarkaive.communications.*;
 import com.moba11y.androida11yutils.A11yNodeInfo;
 import eu.chainfire.libsuperuser.Shell;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.regex.Matcher;
@@ -58,6 +64,9 @@ public class AAService extends AccessibilityService
 	// number of courses that were found on the courses screen
 	int numCourses = 0;
 
+	// set during checkin to indicate that the course currently shown is the correct one to check in to
+	boolean correctCourseFound = false;
+
 	// list of classes being built for a class list request
 	ArrayList<ArkaiveClass> classList = new ArrayList<>();
 
@@ -68,6 +77,15 @@ public class AAService extends AccessibilityService
 
 	// thread which monitors the socket to the server, kicks off checkins, and reports the results back to the server
 	private Thread controllerThread;
+
+	// socket for communications with AutoArkaive server
+	Socket serverSocket;
+	ObjectInputStream requestStream;
+	ObjectOutputStream resultStream;
+
+	// socket to accept connections
+	ServerSocket acceptorSocket;
+	final static int PORT = 3128;
 
     public AAService()
     {
@@ -84,10 +102,20 @@ public class AAService extends AccessibilityService
 				.build();
 		startForeground(FOREGROUND_SERVICE_ID, notification);
 
+		// create socket
+		try
+		{
+			acceptorSocket = new ServerSocket(PORT);
+		}
+		catch(IOException ex)
+		{
+			ex.printStackTrace();
+		}
+
 		return START_STICKY;
 	}
 
-	private void setState(State state)
+	private synchronized void setState(State state)
 	{
 		Log.i(TAG, "Set state: " + state.toString());
 		this.state = state;
@@ -99,15 +127,17 @@ public class AAService extends AccessibilityService
 		super.onServiceConnected();
 		Log.d(TAG, "onServiceConnected() called");
 
-		setState(State.EXECUTING);
+		setState(State.IDLE);
 
 		// for testing
-		//checkin = new CheckinRequest(0, 0, 0, "smit109@usc.edu", "xxxxxxxx", "Principles of Software Development", null, null);
+		//checkinRequest = new CheckinRequest(0, 0, 0, "smit109@usc.edu", "xxxxxxx", new ArkaiveClass("", "QN7K"), null, null);
+		//requestType = RequestType.CHECKIN;
+
 		//requestType = RequestType.LOGIN_CHECK;
 		//loginCheckRequest = new LoginCheckRequest("smit109@usc.edu", "xxxxxxxx");
 
-		requestType = RequestType.CLASS_LIST;
-		classListRequest = new ClassListRequest("smit109@usc.edu", "xxxxxxx");
+		//requestType = RequestType.CLASS_LIST;
+		//classListRequest = new ClassListRequest("smit109@usc.edu", "xxxxxxx");
 
 	}
 
@@ -117,6 +147,26 @@ public class AAService extends AccessibilityService
 		super.onDestroy();
 		Log.w(TAG, "Destroyed!");
 		stopForeground(true);
+		controllerThread.interrupt();
+		try
+		{
+			controllerThread.join();
+		}
+		catch(InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+
+		// close sockets
+		try
+		{
+			serverSocket.close();
+			acceptorSocket.close();
+		}
+		catch(IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -269,48 +319,67 @@ public class AAService extends AccessibilityService
 					setState(State.DONE);
 				}
 			}
-			else if(currentScreen == ArkaiveUIScreen.COURSE_SELECTION)
+			else if(currentScreen == ArkaiveUIScreen.COURSE_SELECTION || currentScreen == ArkaiveUIScreen.COURSE_SELECTION_ENTRIES)  // sometimes the courses got loaded later in a fragment, so we handle both cases
 			{
-				// if we're doing a login check, we're done!
-				if(requestType == RequestType.LOGIN_CHECK)
+				if(state != State.LOGOUT)
 				{
-					Log.i(TAG, "Done with login check, going to logout");
-					setState(State.LOGOUT);
-				}
-				else if(requestType == RequestType.CLASS_LIST || requestType == RequestType.CHECKIN)
-				{
-					// find course list node
-					A11yNodeInfo drawerLayout = rootNode.getChild(rootNode.getChildCount() - 1);
-					A11yNodeInfo relativeLayout = drawerLayout.getChild(0);
-					A11yNodeInfo courseListNode = relativeLayout.getChild(0);
-
-
-					int numCourses = courseListNode.getChildCount() - 2;
-
-					if(checkingCourseIndex >= numCourses)
+					// if we're doing a login check, we're done!
+					if(requestType == RequestType.LOGIN_CHECK)
 					{
-						Log.i(TAG, "Done listing " + numCourses + " courses!");
+						Log.i(TAG, "Done with login check, going to logout");
+						setState(State.LOGOUT);
+					}
+					else if(requestType == RequestType.CLASS_LIST || requestType == RequestType.CHECKIN)
+					{
+						// find course list node
+						A11yNodeInfo courseListNode;
 
-						// done looking through all courses
-						state = State.LOGOUT;
-						if(requestType == RequestType.CHECKIN)
+						if(currentScreen == ArkaiveUIScreen.COURSE_SELECTION)
 						{
-							errorInRequest = true;
-							failureMessage = "Failed to find requested class in Arkaive app";
+							A11yNodeInfo drawerLayout = rootNode.getChild(rootNode.getChildCount() - 1);
+							A11yNodeInfo relativeLayout = drawerLayout.getChild(0);
+							courseListNode = relativeLayout.getChild(0);
 						}
-						else if(requestType == RequestType.CLASS_LIST)
+						else
 						{
-							Log.i(TAG, "Got classes: " + classList.toString());
+							A11yNodeInfo relativeLayout = rootNode.getChild(0);
+							courseListNode = relativeLayout.getChild(0);
+						}
+
+						if(courseListNode.getChildCount() < 2)
+						{
+							// screen not fully loaded yet
+							return;
+						}
+
+						int numCourses = courseListNode.getChildCount() - 2;
+
+						if(checkingCourseIndex >= numCourses)
+						{
+							Log.i(TAG, "Done listing " + numCourses + " courses!");
+
+							// done looking through all courses
+							state = State.LOGOUT;
+							if(requestType == RequestType.CHECKIN)
+							{
+								errorInRequest = true;
+								failureMessage = "Failed to find requested class in Arkaive app";
+							}
+							else if(requestType == RequestType.CLASS_LIST)
+							{
+								Log.i(TAG, "Got classes: " + classList.toString());
+							}
+						}
+						else
+						{
+							Log.i(TAG, "Clicking on course " + checkingCourseIndex);
+
+							A11yNodeInfo courseEntry = courseListNode.getChild(checkingCourseIndex + 1);
+							courseEntry.performAction(A11yNodeInfo.Actions.CLICK);
 						}
 					}
-					else
-					{
-						Log.i(TAG, "Clicking on course " + checkingCourseIndex);
-
-						A11yNodeInfo courseEntry = courseListNode.getChild(checkingCourseIndex + 1);
-						courseEntry.performAction(A11yNodeInfo.Actions.CLICK);
-					}
 				}
+
 
 				// log the user out now that we have the opportunity
 				if(state == State.LOGOUT)
@@ -357,9 +426,7 @@ public class AAService extends AccessibilityService
 
 				if(requestType == RequestType.CLASS_LIST)
 				{
-					ArkaiveClass classEntry = new ArkaiveClass();
-					classEntry.courseCode = enrollmentCode;
-					classEntry.className = courseName;
+					ArkaiveClass classEntry = new ArkaiveClass(courseName, enrollmentCode);
 
 					if(!classList.contains(classEntry))
 					{
@@ -370,12 +437,50 @@ public class AAService extends AccessibilityService
 
 
 				}
+				else if(requestType == RequestType.CHECKIN)
+				{
+					// check if this is the course we want
+					moveToNextCourse = !enrollmentCode.equals(checkinRequest.course.courseCode);
+
+					if(!moveToNextCourse)
+					{
+						Log.i(TAG, "This is the course we're trying to check in to!");
+					}
+				}
 
 				if(moveToNextCourse)
 				{
 					// move to the next course and go back
 					checkingCourseIndex++;
 					performGlobalAction(GLOBAL_ACTION_BACK);
+				}
+				else
+				{
+					// set flag telling checkin handler to check in
+					correctCourseFound = true;
+				}
+			}
+			else if(currentScreen == ArkaiveUIScreen.CHECKIN_BUTTON)
+			{
+				if(requestType == RequestType.CHECKIN && correctCourseFound)
+				{
+					Log.i(TAG, "Clicking checkin!");
+					rootNode.performAction(A11yNodeInfo.Actions.CLICK);
+
+					//setState(State.LOGOUT);
+				}
+			}
+			else if(currentScreen == ArkaiveUIScreen.CLASS_NOT_IN_SESSION || currentScreen == ArkaiveUIScreen.CLASS_IN_PROGRESS)
+			{
+				if(requestType == RequestType.CHECKIN && correctCourseFound)
+				{
+					// since we're seeing this UI element, we know we screwed up
+
+					errorInRequest = true;
+					failureMessage = "Checkin for this class is not open!";
+
+					performGlobalAction(GLOBAL_ACTION_BACK);
+					setState(State.LOGOUT);
 				}
 			}
 
@@ -386,6 +491,7 @@ public class AAService extends AccessibilityService
 			ex.printStackTrace();
 		}
 	}
+
 
     @Override
     public void onInterrupt()
@@ -398,22 +504,41 @@ public class AAService extends AccessibilityService
 	{
 		public void run()
 		{
+			// wait for server to connect
+			try
+			{
+				serverSocket = acceptorSocket.accept();
+				requestStream = new ObjectInputStream(serverSocket.getInputStream());
+				resultStream = new ObjectOutputStream(serverSocket.getOutputStream());
+			}
+			catch(IOException e)
+			{
+				e.printStackTrace();
+			}
+
 			try
 			{
 				switch(state)
 				{
 					case IDLE:
 						// wait for next request from server
+						//Object request = requestStream.readObject();
 
 						// start Arkaive app
+						Intent arkaiveIntent = new Intent(Intent.ACTION_VIEW);
+						arkaiveIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+						arkaiveIntent.setComponent(new ComponentName("com.arkaive.arkaive", "com.arkaive.arkaive.HomeActivity"));
+						arkaiveIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+						startActivity(arkaiveIntent);
 
-						state = State.EXECUTING;
+						setState(State.EXECUTING);
 
 						// reset all state machine variables
 						errorInRequest = false;
 						failureMessage = "";
 						checkingCourseIndex = 0;
 						classList.clear();
+						correctCourseFound = false;
 
 						break;
 
@@ -431,11 +556,13 @@ public class AAService extends AccessibilityService
 						{
 							// report failure to server
 							ResultFailure failureResult = new ResultFailure(failureMessage);
+							resultStream.writeObject(failureResult);
 						}
 						else
 						{
 							// report success to server
-
+							ResultSuccess successResult = new ResultSuccess();
+							resultStream.writeObject(successResult);
 						}
 						break;
 				}
@@ -443,6 +570,10 @@ public class AAService extends AccessibilityService
 			catch(InterruptedException ex)
 			{
 				// do nothing
+			}
+			catch(IOException /*| ClassNotFoundException */e)
+			{
+				e.printStackTrace();
 			}
 		}
 	}
