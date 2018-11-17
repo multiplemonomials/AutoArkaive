@@ -70,7 +70,7 @@ public class databaseThread extends Thread{
 				LocalTime enddatetime = LocalTime.parse(endtime, formatter);
 				
 				CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,courseName,startdatetime,enddatetime);
-				cq.add(cir);
+				cq.enqueueCheckin(cir);
 			}
 			
 				
