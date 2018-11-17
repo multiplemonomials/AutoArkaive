@@ -15,7 +15,7 @@ public class EmulatorTestSuite
 	{
 		// to the tester: fill in your login here (and don't forget to remove before committing)
 		String realArkaiveLogin = "smit109@usc.edu";
-		String realArkaivePassword = "xxxxxx";
+		String realArkaivePassword = "xxxxxxxx";
 		
 		
 		// test 1: startup

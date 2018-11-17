@@ -1,9 +1,7 @@
 package com.autoarkaive;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -35,9 +33,6 @@ public class EmulatorController
 	
 	// path to Android SDK on the host system
 	final static private String ANDROID_SDK_PATH = "C:/android-sdk";
-	
-	// path to folder in Eclipse project containing Arkaive and AutoArkaive APKs
-	final static private String APK_FOLDER_PATH = "C:/Users/jamie/Documents/AutoArkaive/APKs";
 	
 	// name of pre-created Android Virtual Device to run
 	final static private String AVD_NAME = "Nexus_5_API_25";
@@ -96,8 +91,6 @@ public class EmulatorController
 			// connect to control socket
 			emulatorSocket = new Socket("localhost", EMULATOR_SHELL_PORT);
 			emulatorShell = new PrintWriter(emulatorSocket.getOutputStream());
-
-			BufferedReader emulatorReader = new BufferedReader(new InputStreamReader(emulatorSocket.getInputStream()));
 						
 			// perform authentication
 			FileInputStream authInputStream = new FileInputStream(AUTH_FILE_PATH.toFile());
@@ -116,25 +109,7 @@ public class EmulatorController
 			emulatorShell.flush();
 
 			System.out.println("Successfully connected to emulator!");
-			System.out.println("Setting up AutoArkaive app...");
-			
-			// Install Arkaive and AutoArkaive APKS
-			runADBCommand("install", Paths.get(APK_FOLDER_PATH, "Arkaive.apk").toString());
-			runADBCommand("install", Paths.get(APK_FOLDER_PATH, "AutoArkaive.apk").toString());
-			
-			// grant accessibility permission
-			// from here: https://stackoverflow.com/questions/46899547/granting-accessibility-service-permission-for-debug-purposes
-			runADBCommand("shell", "settings", "put", "secure", "enabled_accessibility_services", "%accessibility:" + AA_APP_PACKAGE + "/" + AA_APP_SERVICE_CLASS);
-			
-			// grant Arkaive its location permission
-			runADBCommand("shell", "pm", "grant", "com.arkaive.arkaive", "permission:android.permission.ACCESS_FINE_LOCATION");
-			
-			// start AA app
-			runADBCommand("shell", "am", "start", "-n", AA_APP_PACKAGE + "/" + AA_APP_MAIN_CLASS);
-			
-			// wait for app to start up
-			Thread.sleep(5000);
-			
+			System.out.println("Connecting to AutoArkaive s...");
 			
 			// open socket to app
 			appSocket = new Socket("localhost", AA_APP_PORT);
@@ -238,7 +213,7 @@ public class EmulatorController
 		} 
 		catch (Exception e) 
 		{
-			System.err.printf("Caught %s while sending class list request to emulator: %s\n", e.getClass().getSimpleName(), e.getMessage());
+			System.err.printf("Caught %s while sending login check request to emulator: %s\n", e.getClass().getSimpleName(), e.getMessage());
 			e.printStackTrace();
 		}
 		
