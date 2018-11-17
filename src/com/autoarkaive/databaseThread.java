@@ -65,7 +65,11 @@ public class databaseThread extends Thread{
 				String endtime= rs.getString("checkinEndTime");
 
 				//TODO confirm that we can just pass a string to the object and it will make a jodatime
-				CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,courseName,starttime,endtime);
+				DateTimeFormatter formatter = DateTimeFormat.forPattern("HH:mm");
+				LocalTime startdatetime = LocalTime.parse(starttime, formatter);
+				LocalTime enddatetime = LocalTime.parse(endtime, formatter);
+				
+				CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,courseName,startdatetime,enddatetime);
 				cq.add(cir);
 			}
 			
