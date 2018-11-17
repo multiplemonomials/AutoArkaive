@@ -122,6 +122,8 @@ public class UtilityServlet extends HttpServlet{
 			String query = "Insert Into myUsers (fullname, email, picurl, arkaive_username, arkaive_password)"
 					+ "values (?, ?, ?, ?, ?)";
 
+			preparedStmt = conn.prepareStatement(query);
+			
 		//Fill in the question marks
 		preparedStmt.setString (1, fullname);
 		preparedStmt.setString(2, email);
@@ -231,7 +233,7 @@ public class UtilityServlet extends HttpServlet{
 		
 		//expecting that getClassList will return an arraylist of ArkaiveClass objects
 		
-		ArrayList<ArkaiveClass> finalList = getClassList(arkaive_username, arkaive_password);
+		ArrayList<ArkaiveClass> finalList = cq.getClassList(arkaive_username, arkaive_password);
 	
 
 		String jsonoutput = new Gson().toJson(finalList);
@@ -326,7 +328,7 @@ public class UtilityServlet extends HttpServlet{
 			json = fetchClasses(username, password);
 		}
 		else if( command.equals("test") ) {
-			response.getContentType("application/json");
+			response.setContentType("application/json");
 			response.setCharacterEncoding("utf-8");
 			PrintWriter out = response.getWriter();
 			out.print(new Gson().toJson("{test: false}"));
@@ -337,7 +339,7 @@ public class UtilityServlet extends HttpServlet{
 		
 		//Parse json and set in the request parameters;
 		//Look up pretty printing if needed, for debugging
-		response.getContentType("application/json");
+		response.setContentType("application/json");
 		response.setCharacterEncoding("utf-8");
 		PrintWriter out = response.getWriter();
 		out.print(new Gson().toJson(json));
