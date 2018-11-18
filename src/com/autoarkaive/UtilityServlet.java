@@ -1,4 +1,5 @@
 package com.autoarkaive;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -8,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,7 +17,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.autoarkaive.communications.ArkaiveClass;
 import com.google.gson.Gson;
 
 @WebServlet("/UtilityServlet")
@@ -26,6 +27,7 @@ public class UtilityServlet extends HttpServlet{
 	private static String username = "root";
 	private static String password = "root";
 	private static String databaseName = "arkaiveInfo";
+	private static Properties p;
 	
 	public String checkUser(HttpServletRequest request, HttpServletResponse response) {
 		//Returns json with true or false value
@@ -45,7 +47,7 @@ public class UtilityServlet extends HttpServlet{
 		//From Sai Allu Assignment 3
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=root&password=uhoi&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			st = conn.createStatement();
 			
 			/* Checks if user is in database */
@@ -117,7 +119,7 @@ public class UtilityServlet extends HttpServlet{
 		try {
 			//Establish database connection
 		Class.forName("com.mysql.jdbc.Driver");
-		conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&");
+		conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 		st = conn.createStatement();
 
 			String query = "Insert Into myUsers (fullname, email, picurl, arkaive_username, arkaive_password)"
@@ -173,7 +175,7 @@ public class UtilityServlet extends HttpServlet{
 		try{
 			
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CalendarInfo?user=root&password=*****&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			
 			
 			String insertstatement = "INSERT INTO myClasses(checkinStartTime,checkinEndTime,latitude,longitude,altitude,courseCode,classname) "
@@ -251,7 +253,7 @@ public class UtilityServlet extends HttpServlet{
 		//From Sai Allu Assignment 3
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=uhoi&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			st = conn.createStatement();
 			
 			ArrayList<String> userandpass = new ArrayList<String>();
@@ -302,6 +304,8 @@ public class UtilityServlet extends HttpServlet{
 
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		//doGet(request, response);
+		//The configuration file name is passed in as a command-line argument
+		p = PropertiesCreator.readPropertyFile("AutoArkaive/SystemConfiguration.properties");
 		
 		String command="";
 		command = request.getParameter("command");
