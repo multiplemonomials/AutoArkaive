@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.autoarkaive.communications.ArkaiveClass;
 import com.google.gson.Gson;
 
-@WebServlet("/AutoArkaive/UtilityServlet")
+@WebServlet("/UtilityServlet")
 public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	
@@ -104,7 +104,7 @@ public class UtilityServlet extends HttpServlet{
 
 	    String arkaive_username = request.getParameter("arkaive_username");
 	   
-	    String arkaive_password = Hashing.get_SHA_1_SecurePassword( request.getParameter("arkaive_password") );
+	    String arkaive_password = request.getParameter("arkaive_password");
 	    //String arkaive_password = hash( request.getParameter("arkaive_password") );
 	    String picurl = request.getParameter("picurl");
 		
@@ -138,8 +138,10 @@ public class UtilityServlet extends HttpServlet{
 		// execute the preparedstatement
 		preparedStmt.execute();
 		}
-	    catch (SQLException sqle) {
-		System.out.println ("SQLException: " + sqle.getMessage());
+	    catch (SQLException sqle) 
+		{
+			sqle.printStackTrace();
+			
 	    } catch (ClassNotFoundException cnfe) {
 		System.out.println ("ClassNotFoundException: " + cnfe.getMessage());
 	    } finally {
@@ -349,6 +351,8 @@ public class UtilityServlet extends HttpServlet{
 		response.setHeader("Access-Control-Allow-Methods", "GET");
 		response.setContentType("application/json;charset=UTF-8");
 		PrintWriter out = response.getWriter();
+		
+		System.out.println("service() returned " + json);
 		
 		out.print(new Gson().toJson(json));
 		
