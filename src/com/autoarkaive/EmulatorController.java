@@ -41,7 +41,7 @@ public class EmulatorController
 	// ----------------------------------------------------------------
 	
 	// port that emulator's control shell will run on 
-	final static int EMULATOR_SHELL_PORT = 5554;
+	final static int EMULATOR_SHELL_PORT = 55540;
 	
 	// executable file suffix of host system
 	final static String EXE_SUFFIX = System.getProperty("os.name").contains("Windows") ? ".exe" : "";
@@ -129,7 +129,7 @@ public class EmulatorController
 			
 			if(emulatorProcess != null)
 			{
-				emulatorProcess.destroy();
+				//emulatorProcess.destroy();
 			}
 		}
 	}
