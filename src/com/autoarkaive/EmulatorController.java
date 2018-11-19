@@ -51,7 +51,7 @@ public class EmulatorController
 	final static Path AUTH_FILE_PATH = Paths.get(System.getProperty("user.home"), ".emulator_console_auth_token");
 	
 	// port that the AutoArkaive app will listen on 
-	final static int AA_APP_PORT = 3128;
+	final static int AA_APP_PORT = 31280;
 	
 	// package of AA app
 	final static String AA_APP_PACKAGE = "com.autoarkaive.autoarkaive";

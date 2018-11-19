@@ -90,7 +90,7 @@ public class AAService extends AccessibilityService implements LocationListener
 
 	// socket to accept connections
 	ServerSocket acceptorSocket;
-	final static int PORT = 3128;
+	final static int PORT = 31280;
 
 	// location manager for location services
 	LocationManager locationManager;
