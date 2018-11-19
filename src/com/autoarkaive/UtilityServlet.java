@@ -92,7 +92,7 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("sqle: " + sqle.getMessage());
 			}
 		}
-		return "";
+		return "{ arkaiveAccountExists: false }";
 	}
 	
 	public String addUser(HttpServletRequest request, HttpServletResponse response) {
