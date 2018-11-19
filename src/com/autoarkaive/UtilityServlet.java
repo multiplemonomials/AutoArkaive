@@ -57,18 +57,18 @@ public class UtilityServlet extends HttpServlet{
 			check.setString(1, request.getParameter("email"));
 			rs = check.executeQuery();
 			int count = 0;
-			boolean found = false;
+			String found = "false";
 			
 			while (rs.next()) {
 				count = rs.getInt("count");
 				
 				if(count > 0)
-					found = true;
+					found = "true";
 				
 				System.out.println ("Count = " + count);
 			}
 			
-			return "{ arkaiveAccountExists: " + found + " }"; 
+			return "{\"arkaiveAccountExists\": " + found + "}"; 
 			
 		} catch (SQLException sqle) {
 			System.out.println ("SQLException: " + sqle.getMessage());
@@ -92,7 +92,7 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("sqle: " + sqle.getMessage());
 			}
 		}
-		return "{ arkaiveAccountExists: false }";
+		return "{\"arkaiveAccountExists\": false}";
 	}
 	
 	public String addUser(HttpServletRequest request, HttpServletResponse response) {
@@ -109,7 +109,7 @@ public class UtilityServlet extends HttpServlet{
 	    String picurl = request.getParameter("picurl");
 		
 	    if(!cq.testLogin(arkaive_username,arkaive_password)) {
-	    	return "{ isValidArkaiveAccount: false }";
+	    	return "{\"isValidArkaiveAccount\": false}";
 	    }
 
 	    Connection conn = null;
@@ -161,7 +161,7 @@ public class UtilityServlet extends HttpServlet{
 			}
 	    }
 		
-		return "{ isValidArkaiveAccount: true }";
+		return "{\"isValidArkaiveAccount\": true}";
 	}
 	
 	
@@ -227,7 +227,7 @@ public class UtilityServlet extends HttpServlet{
 				sqle.printStackTrace(); 
 			}
 		}
-		return "{classWasAdded: false}";
+		return "{\"classWasAdded\": false}";
 	}
 	public String fetchClasses(String arkaive_username, String arkaive_password){
 		//call database to get the arkaive username and password from teh email
@@ -337,7 +337,7 @@ public class UtilityServlet extends HttpServlet{
 			response.setContentType("application/json");
 			response.setCharacterEncoding("utf-8");
 			PrintWriter out = response.getWriter();
-			out.print(new Gson().toJson("{test: false}"));
+			out.print(new Gson().toJson("{\"test\": false}"));
 		}
 		else
 			System.out.println("Invalid command : " + command);
@@ -345,9 +345,11 @@ public class UtilityServlet extends HttpServlet{
 		
 		//Parse json and set in the request parameters;
 		//Look up pretty printing if needed, for debugging
-		response.setContentType("application/json");
-		response.setCharacterEncoding("utf-8");
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", "GET");
+		response.setContentType("application/json;charset=UTF-8");
 		PrintWriter out = response.getWriter();
+		
 		out.print(new Gson().toJson(json));
 		
 		//Forward to appropriate method;
