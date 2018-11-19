@@ -108,8 +108,8 @@ public class UtilityServlet extends HttpServlet{
 	    //String arkaive_password = hash( request.getParameter("arkaive_password") );
 	    String picurl = request.getParameter("picurl");
 		
-	    if(!cq.testLogin(arkaive_username,arkaive_password)){
-		return "{ isValidArkaiveAccount: false }";    
+	    if(!cq.testLogin(arkaive_username,arkaive_password)) {
+	    	return "{ isValidArkaiveAccount: false }";
 	    }
 
 	    Connection conn = null;
@@ -227,7 +227,7 @@ public class UtilityServlet extends HttpServlet{
 				sqle.printStackTrace(); 
 			}
 		}
-		return "";
+		return "{classWasAdded: false}";
 	}
 	public String fetchClasses(String arkaive_username, String arkaive_password){
 		//call database to get the arkaive username and password from teh email
@@ -306,7 +306,7 @@ public class UtilityServlet extends HttpServlet{
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		//doGet(request, response);
 		//The configuration file name is passed in as a command-line argument
-		p = PropertiesCreator.readPropertyFile("AutoArkaive/SystemConfiguration.properties");
+		p = PropertiesCreator.readPropertyFile("/home/joshmin/Development/AutoArkaive/SystemConfiguration.properties");
 		
 		String command="";
 		command = request.getParameter("command");
