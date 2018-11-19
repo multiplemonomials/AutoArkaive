@@ -28,10 +28,10 @@ public class CheckinQueue
 	/**
 	 * Construct checkin queue.  Starts up the Android emulator.
 	 */
-	public CheckinQueue()
+	public CheckinQueue(String androidSDKPath, String AVDName)
 	{
 		checkinQueue = new PriorityBlockingQueue<>();
-		emulatorController = new EmulatorController();
+		emulatorController = new EmulatorController(androidSDKPath, AVDName);
 		emulatorLock = new ReentrantLock();
 		
 		checkinThread = new Thread(this::checkinLoop);

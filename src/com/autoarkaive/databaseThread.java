@@ -24,7 +24,7 @@ public class databaseThread extends Thread{
 	{
 		this.cq = cq;
 		try {
-			p = PropertiesCreator.readPropertyFile("AutoArkaive/SystemConfiguration.properties");
+			p = PropertiesCreator.readPropertyFile(System.getProperty("user.home") + "/SystemConfiguration.properties");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

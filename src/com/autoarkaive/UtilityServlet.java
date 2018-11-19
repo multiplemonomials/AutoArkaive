@@ -306,7 +306,7 @@ public class UtilityServlet extends HttpServlet{
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		//doGet(request, response);
 		//The configuration file name is passed in as a command-line argument
-		p = PropertiesCreator.readPropertyFile("/home/joshmin/Development/AutoArkaive/SystemConfiguration.properties");
+		p = PropertiesCreator.readPropertyFile(System.getProperty("user.home") + "/SystemConfiguration.properties");
 		
 		String command="";
 		command = request.getParameter("command");
@@ -314,7 +314,7 @@ public class UtilityServlet extends HttpServlet{
 		String json="";
 		
 		if(cq == null){
-			cq = new CheckinQueue();
+			cq = new CheckinQueue(p.getProperty("androidSDKPath", "C:/android-sdk"), p.getProperty("AVDName", ""));
 			databaseThread dbt = new databaseThread(cq);
 			dbt.start();
 		}

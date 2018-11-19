@@ -23,12 +23,12 @@ public class EmulatorTestSuite
 	{
 		// to the tester: fill in your login here (and don't forget to remove before committing)
 		String realArkaiveLogin = "smit109@usc.edu";
-		String realArkaivePassword = "hollogarci";
+		String realArkaivePassword = "xxxxxxxx";
 		
 		
 		// test 1: startup
 		System.out.println(">>> Starting Emulator...");
-		EmulatorController emulator = new EmulatorController();
+		EmulatorController emulator = new EmulatorController("C:/android-sdk/", "Nexus_6_API_25");
 		
 		// test 2: correct login check
 		System.out.println(">>> Testing Correct Login...");

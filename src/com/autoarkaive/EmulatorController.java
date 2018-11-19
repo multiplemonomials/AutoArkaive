@@ -28,14 +28,14 @@ import com.autoarkaive.communications.ResultSuccess;
  */
 public class EmulatorController 
 {
-	// Configure below variables before deploying
+	// below variables passed in from config file
 	// ----------------------------------------------------------------
 	
 	// path to Android SDK on the host system
-	final static private String ANDROID_SDK_PATH = "C:/android-sdk";
+	final private String androidSDKPath;
 	
 	// name of pre-created Android Virtual Device to run
-	final static private String AVD_NAME = "Nexus_5_API_25";
+	final private String AVDName;
 	
 	// Following variables should not need configuration
 	// ----------------------------------------------------------------
@@ -72,8 +72,11 @@ public class EmulatorController
 	private ObjectOutputStream appSocketSerializer;
 
 	
-	public EmulatorController()
+	public EmulatorController(String androidSDKPath, String AVDName)
 	{
+		this.androidSDKPath = androidSDKPath;
+		this.AVDName = AVDName;
+		
 		Process emulatorProcess = null;
 		
 		try 
@@ -82,7 +85,7 @@ public class EmulatorController
 			System.out.println("Starting emulator...");
 			
 			// start emulator
-			emulatorProcess = new ProcessBuilder(ANDROID_SDK_PATH + "/tools/emulator" + EXE_SUFFIX, "-avd", AVD_NAME, "-port", Integer.toString(EMULATOR_SHELL_PORT)).start();
+			emulatorProcess = new ProcessBuilder(androidSDKPath + "/tools/emulator" + EXE_SUFFIX, "-avd", AVDName, "-port", Integer.toString(EMULATOR_SHELL_PORT)).start();
 			
 			// give it some time to get going
 			System.out.println("Started emulator.  Waiting 50s for startup.");
@@ -245,7 +248,7 @@ public class EmulatorController
 	{
 		// build full command line
 		String[] commandLine = new String[ADBArgs.length + 1];
-		commandLine[0] = ANDROID_SDK_PATH + "/platform-tools/adb" + EXE_SUFFIX;
+		commandLine[0] = androidSDKPath + "/platform-tools/adb" + EXE_SUFFIX;
 		System.arraycopy(ADBArgs, 0, commandLine, 1, ADBArgs.length);
 		
 		System.out.println("Executing: " + Arrays.toString(commandLine));
