@@ -1,4 +1,5 @@
 package com.autoarkaive;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -8,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -26,6 +28,7 @@ public class UtilityServlet extends HttpServlet{
 	private static String username = "root";
 	private static String password = "root";
 	private static String databaseName = "arkaiveInfo";
+	private static Properties p;
 	
 	public String checkUser(HttpServletRequest request, HttpServletResponse response) {
 		//Returns json with true or false value
@@ -45,7 +48,7 @@ public class UtilityServlet extends HttpServlet{
 		//From Sai Allu Assignment 3
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=root&password=uhoi&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			st = conn.createStatement();
 			
 			/* Checks if user is in database */
@@ -54,18 +57,18 @@ public class UtilityServlet extends HttpServlet{
 			check.setString(1, request.getParameter("email"));
 			rs = check.executeQuery();
 			int count = 0;
-			boolean found = false;
+			String found = "false";
 			
 			while (rs.next()) {
 				count = rs.getInt("count");
 				
 				if(count > 0)
-					found = true;
+					found = "true";
 				
 				System.out.println ("Count = " + count);
 			}
 			
-			return "{ arkaiveAccountExists: " + found + " }"; 
+			return "{\"arkaiveAccountExists\": " + found + "}"; 
 			
 		} catch (SQLException sqle) {
 			System.out.println ("SQLException: " + sqle.getMessage());
@@ -89,7 +92,7 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println("sqle: " + sqle.getMessage());
 			}
 		}
-		return "";
+		return "{\"arkaiveAccountExists\": false}";
 	}
 	
 	public String addUser(HttpServletRequest request, HttpServletResponse response) {
@@ -105,8 +108,8 @@ public class UtilityServlet extends HttpServlet{
 	    //String arkaive_password = hash( request.getParameter("arkaive_password") );
 	    String picurl = request.getParameter("picurl");
 		
-	    if(!cq.testLogin(arkaive_username,arkaive_password)){
-		return "{ isValidArkaiveAccount: false }";    
+	    if(!cq.testLogin(arkaive_username,arkaive_password)) {
+	    	return "{\"isValidArkaiveAccount\": false}";
 	    }
 
 	    Connection conn = null;
@@ -117,7 +120,7 @@ public class UtilityServlet extends HttpServlet{
 		try {
 			//Establish database connection
 		Class.forName("com.mysql.jdbc.Driver");
-		conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&");
+		conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 		st = conn.createStatement();
 
 			String query = "Insert Into myUsers (fullname, email, picurl, arkaive_username, arkaive_password)"
@@ -158,7 +161,7 @@ public class UtilityServlet extends HttpServlet{
 			}
 	    }
 		
-		return "{ isValidArkaiveAccount: true }";
+		return "{\"isValidArkaiveAccount\": true}";
 	}
 	
 	
@@ -173,7 +176,7 @@ public class UtilityServlet extends HttpServlet{
 		try{
 			
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/CalendarInfo?user=root&password=*****&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			
 			
 			String insertstatement = "INSERT INTO myClasses(checkinStartTime,checkinEndTime,latitude,longitude,altitude,courseCode,classname) "
@@ -224,7 +227,7 @@ public class UtilityServlet extends HttpServlet{
 				sqle.printStackTrace(); 
 			}
 		}
-		return "";
+		return "{\"classWasAdded\": false}";
 	}
 	public String fetchClasses(String arkaive_username, String arkaive_password){
 		//call database to get the arkaive username and password from teh email
@@ -251,7 +254,7 @@ public class UtilityServlet extends HttpServlet{
 		//From Sai Allu Assignment 3
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/GoogleUsers?user=root&password=uhoi&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			st = conn.createStatement();
 			
 			ArrayList<String> userandpass = new ArrayList<String>();
@@ -302,6 +305,8 @@ public class UtilityServlet extends HttpServlet{
 
 	protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		//doGet(request, response);
+		//The configuration file name is passed in as a command-line argument
+		p = PropertiesCreator.readPropertyFile("/home/joshmin/Development/AutoArkaive/SystemConfiguration.properties");
 		
 		String command="";
 		command = request.getParameter("command");
@@ -332,7 +337,7 @@ public class UtilityServlet extends HttpServlet{
 			response.setContentType("application/json");
 			response.setCharacterEncoding("utf-8");
 			PrintWriter out = response.getWriter();
-			out.print(new Gson().toJson("{test: false}"));
+			out.print(new Gson().toJson("{\"test\": false}"));
 		}
 		else
 			System.out.println("Invalid command : " + command);
@@ -340,9 +345,11 @@ public class UtilityServlet extends HttpServlet{
 		
 		//Parse json and set in the request parameters;
 		//Look up pretty printing if needed, for debugging
-		response.setContentType("application/json");
-		response.setCharacterEncoding("utf-8");
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		response.setHeader("Access-Control-Allow-Methods", "GET");
+		response.setContentType("application/json;charset=UTF-8");
 		PrintWriter out = response.getWriter();
+		
 		out.print(new Gson().toJson(json));
 		
 		//Forward to appropriate method;
