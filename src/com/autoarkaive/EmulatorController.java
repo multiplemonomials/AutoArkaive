@@ -85,8 +85,9 @@ public class EmulatorController
 			emulatorProcess = new ProcessBuilder(ANDROID_SDK_PATH + "/tools/emulator" + EXE_SUFFIX, "-avd", AVD_NAME, "-port", Integer.toString(EMULATOR_SHELL_PORT)).start();
 			
 			// give it some time to get going
-			System.out.println("Started emulator.  Waiting 60s for startup.");
-			Thread.sleep(60000);
+			System.out.println("Started emulator.  Waiting 50s for startup.");
+			Thread.sleep(50000);
+			
 			
 			// connect to control socket
 			emulatorSocket = new Socket("localhost", EMULATOR_SHELL_PORT);
@@ -107,10 +108,10 @@ public class EmulatorController
 			System.out.println("Sending: " + redirCommand);
 			emulatorShell.print(redirCommand);
 			emulatorShell.flush();
-
-			System.out.println("Successfully connected to emulator!");
-			System.out.println("Connecting to AutoArkaive s...");
 			
+			System.out.println("Successfully connected to emulator!");
+			System.out.println("Connecting to AutoArkaive service...");
+
 			// open socket to app
 			appSocket = new Socket("localhost", AA_APP_PORT);
 			appSocketSerializer = new ObjectOutputStream(appSocket.getOutputStream());
@@ -138,9 +139,6 @@ public class EmulatorController
 	{
 		try
 		{
-			// set mock location
-			emulatorShell.printf("geo fix %.05f %.05f %d\n", checkin.latitude, checkin.longitude, checkin.altitude);
-			
 			appSocketSerializer.writeObject(checkin);
 			appSocketSerializer.flush();
 			
@@ -266,5 +264,18 @@ public class EmulatorController
 			e.printStackTrace();
 		}
 		
+	}
+	
+	/**
+	 * Set the simulated location of the emulator
+	 * @param latitude
+	 * @param longitude
+	 * @param altitude
+	 */
+	private void setEmulatorLocation(double latitude, double longitude, int altitude)
+	{
+		String emulatorCommand = String.format("geo fix %.05f %.05f %d\n",  longitude, latitude, altitude);
+		System.out.println("Sending: " + emulatorCommand);
+		emulatorShell.printf(emulatorCommand);
 	}
 }

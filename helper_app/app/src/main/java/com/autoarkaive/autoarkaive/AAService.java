@@ -3,8 +3,13 @@ package com.autoarkaive.autoarkaive;
 import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -25,7 +30,7 @@ import java.util.regex.Pattern;
 /**
  * Service which controls the Arkaive app UI
  */
-public class AAService extends AccessibilityService
+public class AAService extends AccessibilityService implements LocationListener
 {
 	private final String TAG = "AAService";
 
@@ -87,6 +92,9 @@ public class AAService extends AccessibilityService
 	ServerSocket acceptorSocket;
 	final static int PORT = 3128;
 
+	// location manager for location services
+	LocationManager locationManager;
+
     public AAService()
     {
 
@@ -132,6 +140,13 @@ public class AAService extends AccessibilityService
 		// start a new controller thread
 		controllerThread = new Thread(new CheckinControllerThread());
 		controllerThread.start();
+
+		// from https://stackoverflow.com/questions/38251741/how-to-set-android-mock-gps-location
+		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+		locationManager.addTestProvider(LocationManager.GPS_PROVIDER, false, false,
+				false, false, true, true, true, 0, 5);
+		locationManager.setTestProviderEnabled(LocationManager.GPS_PROVIDER, true);
+
 
 		// for testing
 		//checkinRequest = new CheckinRequest(0, 0, 0, "smit109@usc.edu", "xxxxxxx", new ArkaiveClass("", "QN7K"), null, null);
@@ -193,6 +208,7 @@ public class AAService extends AccessibilityService
 			case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
 			case AccessibilityEvent.TYPE_VIEW_FOCUSED:
 			case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
+			case AccessibilityEvent.TYPE_VIEW_SCROLLED:
 				Log.d(TAG, "Caught accessibility event: " + event.toString());
 				Log.d(TAG, "New UI has been created: ");
 
@@ -323,6 +339,17 @@ public class AAService extends AccessibilityService
 					setState(State.DONE);
 				}
 			}
+			else if(currentScreen == ArkaiveUIScreen.NAV_DRAWER)
+			{
+				// prevent crash that appears to be due to clicking this too quickly
+				Thread.sleep(500);
+
+				// GET ME OUT OF HERE!
+				// click close button
+				A11yNodeInfo closeButton = rootNode.getChild(0);
+
+				closeButton.performAction(A11yNodeInfo.Actions.CLICK);
+			}
 			else if(currentScreen == ArkaiveUIScreen.COURSE_SELECTION || currentScreen == ArkaiveUIScreen.COURSE_SELECTION_ENTRIES)  // sometimes the courses got loaded later in a fragment, so we handle both cases
 			{
 				if(state != State.LOGOUT)
@@ -346,13 +373,21 @@ public class AAService extends AccessibilityService
 						}
 						else
 						{
-							A11yNodeInfo relativeLayout = rootNode.getChild(0);
-							courseListNode = relativeLayout.getChild(0);
+							if(rootNode.getChildCount() > 1)
+							{
+								courseListNode = rootNode;
+							}
+							else
+							{
+								A11yNodeInfo relativeLayout = rootNode.getChild(0);
+								courseListNode = relativeLayout.getChild(0);
+							}
+
 						}
 
 						if(courseListNode.getChildCount() < 2)
 						{
-							// screen not fully loaded yet
+							Log.i(TAG, "Course selection not fully loaded yet");
 							return;
 						}
 
@@ -428,17 +463,17 @@ public class AAService extends AccessibilityService
 
 				boolean moveToNextCourse = false;
 
+				ArkaiveClass classEntry = new ArkaiveClass(courseName, enrollmentCode);
+				boolean seenBefore = classList.contains(classEntry);
+
 				if(requestType == RequestType.CLASS_LIST)
 				{
-					ArkaiveClass classEntry = new ArkaiveClass(courseName, enrollmentCode);
+					moveToNextCourse = true;
 
-					if(!classList.contains(classEntry))
+					if(!seenBefore)
 					{
-						// we haven't seen this course before
-						classList.add(classEntry);
-						moveToNextCourse = true;
+						checkingCourseIndex++;
 					}
-
 
 				}
 				else if(requestType == RequestType.CHECKIN)
@@ -446,22 +481,34 @@ public class AAService extends AccessibilityService
 					// check if this is the course we want
 					moveToNextCourse = !enrollmentCode.equals(checkinRequest.course.courseCode);
 
+					if(moveToNextCourse && !seenBefore)
+					{
+						checkingCourseIndex++;
+					}
+
 					if(!moveToNextCourse)
 					{
 						Log.i(TAG, "This is the course we're trying to check in to!");
 					}
 				}
 
+				if(!seenBefore)
+				{
+					classList.add(classEntry);
+				}
+
 				if(moveToNextCourse)
 				{
-					// move to the next course and go back
-					checkingCourseIndex++;
+
 					performGlobalAction(GLOBAL_ACTION_BACK);
+					Log.i(TAG, "Going back!");
+					Thread.sleep(500);
 				}
 				else
 				{
 					// set flag telling checkin handler to check in
 					correctCourseFound = true;
+					Log.i(TAG, "Staying on this course screen");
 				}
 			}
 			else if(currentScreen == ArkaiveUIScreen.CHECKIN_BUTTON)
@@ -574,7 +621,12 @@ public class AAService extends AccessibilityService
 						case EXECUTING:
 
 							// spinlock until the UI actions have finished
-							Thread.sleep(50);
+							Thread.sleep(100);
+
+							if(requestType == RequestType.CHECKIN)
+							{
+								sendMockLocation(checkinRequest.latitude, checkinRequest.longitude, checkinRequest.altitude);
+							}
 
 							break;
 
@@ -620,5 +672,50 @@ public class AAService extends AccessibilityService
 				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Send a mock location update with the given parameters
+	 * @param latitude
+	 * @param longitude
+	 * @param altitude
+	 */
+	private void sendMockLocation(double latitude, double longitude, int altitude)
+	{
+
+		// from here: https://stackoverflow.com/questions/38251741/how-to-set-android-mock-gps-location
+		Location mockLocation = new Location(LocationManager.GPS_PROVIDER);
+		mockLocation.setLatitude(latitude);
+		mockLocation.setLongitude(longitude);
+		mockLocation.setAltitude(altitude);
+		mockLocation.setTime(System.currentTimeMillis());
+		mockLocation.setAccuracy(1);
+		mockLocation.setElapsedRealtimeNanos(SystemClock.elapsedRealtimeNanos());
+
+		locationManager.setTestProviderLocation(LocationManager.GPS_PROVIDER, mockLocation);
+	}
+
+	@Override
+	public void onLocationChanged(Location location)
+	{
+		Log.i(TAG, "Got location update: " + location.toString());
+	}
+
+	@Override
+	public void onStatusChanged(String provider, int status, Bundle extras)
+	{
+
+	}
+
+	@Override
+	public void onProviderEnabled(String provider)
+	{
+		Log.i(TAG, "Location provider enabled: " + provider);
+	}
+
+	@Override
+	public void onProviderDisabled(String provider)
+	{
+		Log.i(TAG, "Location provider disabled: " + provider);
 	}
 }
