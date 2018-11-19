@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import com.autoarkaive.communications.ArkaiveClass;
 import com.google.gson.Gson;
 
-@WebServlet("/UtilityServlet")
+@WebServlet("/AutoArkaive/UtilityServlet")
 public class UtilityServlet extends HttpServlet{
 	private static final long serialVersionUID = 1L;
 	

@@ -28,7 +28,7 @@ public class EmulatorTestSuite
 		
 		// test 1: startup
 		System.out.println(">>> Starting Emulator...");
-		EmulatorController emulator = new EmulatorController("C:/android-sdk/", "Nexus_6_API_25");
+		EmulatorController emulator = new EmulatorController("C:/android-sdk/", "Nexus_5_API_25");
 		
 		// test 2: correct login check
 		System.out.println(">>> Testing Correct Login...");
