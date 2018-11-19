@@ -129,7 +129,7 @@ public class EmulatorController
 			
 			if(emulatorProcess != null)
 			{
-				emulatorProcess.destroy();
+				//emulatorProcess.destroy();
 			}
 		}
 	}

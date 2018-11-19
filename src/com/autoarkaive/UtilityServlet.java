@@ -327,7 +327,7 @@ public class UtilityServlet extends HttpServlet{
 			json = addClass(request, response);
 		else if(  command.equals("checkUser") )
 			json = checkUser(request,response);
-		else if( command.equals("fetchclasses")) {
+		else if( command.equals("fetchClasses")) {
 			userandpass = getUsernameAndPassword(request.getParameter("email"));
 			String username = userandpass.get(0);
 			String password = userandpass.get(1);
