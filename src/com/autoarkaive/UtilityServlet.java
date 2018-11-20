@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.ServletException;
@@ -239,7 +240,7 @@ public class UtilityServlet extends HttpServlet{
 		
 		//expecting that getClassList will return an arraylist of ArkaiveClass objects
 		
-		ArrayList<ArkaiveClass> finalList = cq.getClassList(arkaive_username, arkaive_password);
+		List<ArkaiveClass> finalList = cq.getClassList(arkaive_username, arkaive_password);
 	
 
 		String jsonoutput = new Gson().toJson(finalList);
@@ -316,7 +317,13 @@ public class UtilityServlet extends HttpServlet{
 		String json="";
 		
 		if(cq == null){
-			cq = new CheckinQueue(p.getProperty("androidSDKPath", "C:/android-sdk"), p.getProperty("AVDName", ""));
+			
+			// real checkin queue
+			//cq = new CheckinQueueActual(p.getProperty("androidSDKPath", "C:/android-sdk"), p.getProperty("AVDName", ""));
+			
+			// mock checkin queue
+			cq = new CheckinQueueMock();
+			
 			databaseThread dbt = new databaseThread(cq);
 			dbt.start();
 		}
