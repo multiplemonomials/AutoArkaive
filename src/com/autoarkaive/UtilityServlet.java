@@ -245,7 +245,7 @@ public class UtilityServlet extends HttpServlet{
 
 		String jsonoutput = new Gson().toJson(finalList);
 		
-		return jsonoutput;		
+		return "{\"classList\": " + jsonoutput + "}";		
 	}
 	
 	public ArrayList<String> getUsernameAndPassword(String email){
@@ -343,10 +343,8 @@ public class UtilityServlet extends HttpServlet{
 			json = fetchClasses(username, password);
 		}
 		else if( command.equals("test") ) {
-			response.setContentType("application/json");
-			response.setCharacterEncoding("utf-8");
-			PrintWriter out = response.getWriter();
-			out.print(new Gson().toJson("{\"test\": false}"));
+
+			json ="{\"test\": false}";
 		}
 		else
 			System.out.println("Invalid command : " + command);
@@ -356,13 +354,14 @@ public class UtilityServlet extends HttpServlet{
 		//Look up pretty printing if needed, for debugging
 		response.addHeader("Access-Control-Allow-Origin", "*");
 		response.setHeader("Access-Control-Allow-Methods", "GET");
-		response.setContentType("application/json;charset=UTF-8");
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
 		PrintWriter out = response.getWriter();
 		
 		System.out.println("service() returned " + json);
 		
-		out.print(new Gson().toJson(json));
-		
+		//out.print(new Gson().toJson(json));
+		out.print(json);
 		//Forward to appropriate method;
 	}
 
