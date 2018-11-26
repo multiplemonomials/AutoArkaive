@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.HashSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -19,6 +20,7 @@ public class databaseThread extends Thread{
 
 	private static CheckinQueue cq = null;
 	private static Properties p;
+	private HashSet<String> alreadyCheckedIn;
 	
 	Connection conn= null;
 	
@@ -28,6 +30,7 @@ public class databaseThread extends Thread{
 	public databaseThread(CheckinQueue cq) 
 	{
 		this.cq = cq;
+		alreadyCheckedIn = new HashSet<String>();
 		try {
 			p = PropertiesCreator.readPropertyFile(System.getProperty("user.home") + "/SystemConfiguration.properties");
 			
@@ -108,11 +111,16 @@ public class databaseThread extends Thread{
 					LocalTime enddatetime = LocalTime.parse(endtime, formatter);
 
 					String cc = getCourseCode(courseName);
+					
+					String usernameAndCourseCode = username+cc;
 
-					CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
-
+					CheckinRequest cir = null;
+					if(alreadyCheckedIn.contains(usernameAndCourseCode) == false) {
+						cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
+					}
 
 					cq.enqueueCheckin(cir);
+					alreadyCheckedIn.add(usernameAndCourseCode);
 				}
 				
 				try
