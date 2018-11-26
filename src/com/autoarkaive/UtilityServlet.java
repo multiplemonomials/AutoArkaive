@@ -284,7 +284,7 @@ public class UtilityServlet extends HttpServlet{
 			}
 			String jsonoutput = new Gson().toJson(fullclasses);
 			
-			return jsonoutput;
+			return "{\"classes\": " + jsonoutput + "}";
 
 		}catch(SQLException sqle){
 			System.out.println("sqle yo");
@@ -401,8 +401,11 @@ public class UtilityServlet extends HttpServlet{
 			String password = userandpass.get(1);
 			json = fetchClasses(username, password);
 		}
+		else if( command.equals("getAutoArkaiveClasses")) {
+			String email = request.getParameter("email");
+			json = getAutoArkaiveClasses(email);
+		}
 		else if( command.equals("test") ) {
-
 			json ="{\"test\": false}";
 		}
 		else

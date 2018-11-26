@@ -12,7 +12,7 @@ CREATE TABLE myUsers (
 
 
 CREATE TABLE myClasses(
-	FOREIGN KEY (email) REFERENCES myUsers(email),
+	email VARCHAR(60) NOT NULL,,
 	checkinStartTime VARCHAR(300) NOT NULL,
 	checkinEndTime VARCHAR(300) NOT NULL,
 	latitude DOUBLE(20,8) NOT NULL, 
