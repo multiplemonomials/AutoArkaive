@@ -77,7 +77,6 @@ public class databaseThread extends Thread{
 
 			//give precision flexibility-- cut off seconds
 				now = now.substring(0,5);
-				System.out.println("Current time is " + now);
 			//
 
 
