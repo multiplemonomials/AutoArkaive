@@ -23,7 +23,7 @@ public class EmulatorTestSuite
 	{
 		// to the tester: fill in your login here (and don't forget to remove before committing)
 		String realArkaiveLogin = "smit109@usc.edu";
-		String realArkaivePassword = "xxxxxxxx";
+		String realArkaivePassword = "hollogarci";
 		
 		
 		// test 1: startup
@@ -44,7 +44,7 @@ public class EmulatorTestSuite
 		}
 		
 		// test 2: incorrect login check
-		System.out.println(">>> Testing Correct Login...");
+		/*System.out.println(">>> Testing Incorrect Login...");
 		boolean incorrectLoginResult = emulator.testLogin(new LoginCheckRequest(realArkaiveLogin, "notarealpassword"));
 		
 		if(!incorrectLoginResult)
@@ -55,23 +55,25 @@ public class EmulatorTestSuite
 		{
 			System.out.println(">>> Failed!");
 		}
+		*/
 		
-		// test 2: incorrect login check
+		// test 3: class listing
 		System.out.println(">>> Testing Class Listing...");
 		ArrayList<ArkaiveClass> classes = emulator.listClasses(new ClassListRequest("smit109@usc.edu", realArkaivePassword));
 		System.out.println(">>> Class list: " + classes.toString());
 		
+		// test 4: checkin
 		System.out.println(">>> Testing Checkin 1...");
-		emulator.performCheckin(new CheckinRequest(34.021204, -118.287233, 60, realArkaiveLogin, realArkaivePassword, classes.get(0), 
+		emulator.performCheckin(new CheckinRequest(34.0212487, -118.2877008, 60, realArkaiveLogin, realArkaivePassword, classes.get(0), 
 				new LocalTime().withFieldAdded(DurationFieldType.seconds(), -1), 
 				new LocalTime().withFieldAdded(DurationFieldType.seconds(), 1)));
 		System.out.println(">>> Passed!");
 		
-		System.out.println(">>> Testing Checkin N-1...");
-		emulator.performCheckin(new CheckinRequest(34.021204, -118.287233, 60, realArkaiveLogin, realArkaivePassword, classes.get(classes.size() - 1), 
+		/*System.out.println(">>> Testing Checkin N-2...");
+		emulator.performCheckin(new CheckinRequest(34.0212487, -118.2877008, 60, realArkaiveLogin, realArkaivePassword, classes.get(classes.size() - 2), 
 				new LocalTime().withFieldAdded(DurationFieldType.seconds(), -1), 
 				new LocalTime().withFieldAdded(DurationFieldType.seconds(), 1)));
-		System.out.println(">>> Passed!");
+		System.out.println(">>> Passed!");*/
 		
 		//emulator.shutdown();
 	}

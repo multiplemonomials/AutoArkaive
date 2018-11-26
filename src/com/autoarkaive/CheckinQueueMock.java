@@ -21,7 +21,7 @@ public class CheckinQueueMock extends CheckinQueue
 	@Override
 	public void enqueueCheckin(CheckinRequest checkin)
 	{
-		// do nothing
+		System.out.println("Mock checkin: " + checkin.course);
 	}
 
 	@Override
