@@ -252,6 +252,55 @@ public class UtilityServlet extends HttpServlet{
 		return "{\"classList\": " + jsonoutput + "}";		
 	}
 	
+	public String getAutoArkaiveClasses(String email)
+	{
+		System.out.println();
+		System.out.println("Getting Auto Arkaive Classes");
+		
+		PreparedStatement ps = null;
+		Connection conn = null;
+		ResultSet rs= null;
+		try{
+			
+			Class.forName("com.mysql.jdbc.Driver");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
+			
+			
+			String getstatement = "SELECT classname, courseCode, checkinStartTime FROM myClasses WHERE email=?";
+				
+			
+			ps = conn.prepareStatement(getstatement);
+			ps.setString(1, email);
+			rs = ps.executeQuery();
+			
+			while(rs.next()) {
+				String classname = rs.getString("classname");
+				String courseCode = rs.getString("courseCode");
+				String checkinStartTime = rs.getString("checkInStartTime");
+				
+			}
+			
+			return "{\"classWasAdded\": true}";
+
+		}catch(SQLException sqle){
+			System.out.println("sqle yo");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}finally{
+			try{
+				if(rs != null){
+					rs.close();
+				}
+				if(ps != null){
+					ps.close();
+				}
+			} catch(SQLException sqle){
+				sqle.printStackTrace(); 
+			}
+		}
+		return "{\"classWasAdded\": false}";
+	}
+	
 	public ArrayList<String> getUsernameAndPassword(String email){
 		Connection conn = null;
 		Statement st = null;
