@@ -518,21 +518,33 @@ public class AAService extends AccessibilityService implements LocationListener
 					Log.i(TAG, "Clicking checkin!");
 					rootNode.performAction(A11yNodeInfo.Actions.CLICK);
 
-					//setState(State.LOGOUT);
+					setState(State.LOGOUT);
 				}
 			}
 			else if(currentScreen == ArkaiveUIScreen.CLASS_NOT_IN_SESSION || currentScreen == ArkaiveUIScreen.CLASS_IN_PROGRESS)
 			{
 				if(requestType == RequestType.CHECKIN && correctCourseFound)
 				{
-					// since we're seeing this UI element, we know we screwed up
+					if(state == State.EXECUTING)
+					{
+						// since we're seeing this UI element, we know we screwed up
 
-					errorInRequest = true;
-					failureMessage = "Checkin for this class is not open!";
+						errorInRequest = true;
+						failureMessage = "Checkin for this class is not open!";
+					}
 
 					performGlobalAction(GLOBAL_ACTION_BACK);
 					setState(State.LOGOUT);
 				}
+			}
+			else if(currentScreen == ArkaiveUIScreen.BILLING_ERROR_DIALOG)
+			{
+				// Arkaive doesn't seem to like running on an emulator, and shows an error dialog when it tries to ask for money.
+				// make it go away by clicking on the OK button
+				A11yNodeInfo scrollView = rootNode.getChild(1);
+				A11yNodeInfo okButton = scrollView.getChild(0);
+
+				okButton.performAction(A11yNodeInfo.Actions.CLICK);
 			}
 
 		}
