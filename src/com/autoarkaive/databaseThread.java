@@ -6,7 +6,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
 import java.util.Properties;
 
 import org.joda.time.LocalTime;
@@ -21,74 +20,73 @@ public class databaseThread extends Thread{
 	private static CheckinQueue cq = null;
 	private static Properties p;
 	
-	private HashSet<String> alreadyCheckedIn;
+	Connection conn= null;
+	
+	PreparedStatement courseCodePS, checkinPS;
+	
 	
 	public databaseThread(CheckinQueue cq) 
 	{
 		this.cq = cq;
-		alreadyCheckedIn = new HashSet<String>();
 		try {
 			p = PropertiesCreator.readPropertyFile(System.getProperty("user.home") + "/SystemConfiguration.properties");
-		} catch (IOException e) {
+			
+			Class.forName("com.mysql.jdbc.Driver"); //fully qualified class name of jdbc driver coming from the sql jdbc jar file
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
+		
+			courseCodePS = conn.prepareStatement("SELECT courseCode FROM myClasses c WHERE c.classname = ? ");
+			checkinPS = conn.prepareStatement("SELECT * FROM myUsers as u , myClasses as c WHERE c.checkinStartTime < ? AND c.checkinEndTime > ? ");
+			
+		} catch (IOException | ClassNotFoundException | SQLException e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public String getCourseCode(String classname){
-		Connection conn= null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
-		try {
-			Class.forName("com.mysql.jdbc.Driver"); //fully qualified class name of jdbc driver coming from the sql jdbc jar file
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
-			
-			String query = "SELECT courseCode FROM myClasses c WHERE c.classname = ? ";
-			ps = conn.prepareStatement(query);
-			ps.setString(1,classname);
-			rs = ps.executeQuery();
+		try 
+		{
+			courseCodePS.setString(1, classname);
+			rs = courseCodePS.executeQuery();
 			String coursecode = "";
 			if(rs.next()){
 				coursecode = rs.getString("coursecode");
 			}
 			return coursecode;
 			
-		} catch(SQLException sqle){
+		} 
+		catch(SQLException sqle)
+		{
 			System.out.println("sqle1: "+sqle.getMessage());
-		} catch(ClassNotFoundException cnfe){
-			System.out.println("cnfe1: "+ cnfe.getMessage());
-		}
+			sqle.printStackTrace();
+		} 
 		return "";
 	}
 	
-	public void run(){
+	public void run()
+	{
 		//poll database every second
 		//see if there's anyone that needs to be checked in now, using SQL
 		
-		Connection conn= null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
 		try {
-			Class.forName("com.mysql.jdbc.Driver"); //fully qualified class name of jdbc driver coming from the sql jdbc jar file
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
-		
+						
 			while(true) {
 				//convert current time to joda time's LocalTime
 				DateTimeFormatter dateFormat = DateTimeFormat
 				.forPattern("G,C,Y,x,w,e,E,Y,D,M,d,a,K,h,H,k,m,s,S,z,Z");
 
-			LocalTime localtimeobjectnow = new LocalTime();
-			String now = (localtimeobjectnow.now()).toString();
-
-			//give precision flexibility-- cut off seconds
+				LocalTime localtimeobjectnow = new LocalTime();
+				String now = (localtimeobjectnow.now()).toString();
+	
+				//give precision flexibility-- cut off seconds
 				now = now.substring(0,5);
-			//
-
-
-				String query = "SELECT * FROM myUsers as u , myClasses as c WHERE c.checkinStartTime < ? AND c.checkinEndTime > ? ";
-				ps = conn.prepareStatement(query);
-				ps.setString(1,now);
-				ps.setString(2,now);
-				rs = ps.executeQuery();
+				//System.out.println("Current time is " + now);
+				//
+				
+				checkinPS.setString(1,now);
+				checkinPS.setString(2,now);
+				rs = checkinPS.executeQuery();
 
 				while(rs.next()){
 					//get the info for the users class
@@ -99,7 +97,7 @@ public class databaseThread extends Thread{
 					int altitude = rs.getInt("altitude");
 					String username = rs.getString("arkaive_username");
 					String password = rs.getString("arkaive_password");
-					String courseName = rs.getString("courseName");
+					String courseName = rs.getString("classname");
 					//now is the checkintime
 					String starttime = rs.getString("checkinStartTime");
 					String endtime= rs.getString("checkinEndTime");
@@ -110,25 +108,30 @@ public class databaseThread extends Thread{
 					LocalTime enddatetime = LocalTime.parse(endtime, formatter);
 
 					String cc = getCourseCode(courseName);
-					
-					String usernameAndCourseCode = username+cc;
 
-					CheckinRequest cir = null;
-					if(alreadyCheckedIn.contains(usernameAndCourseCode) == false) {
-						cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
-					}
+					CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
+
 
 					cq.enqueueCheckin(cir);
-					alreadyCheckedIn.add(usernameAndCourseCode);
+				}
+				
+				try
+				{
+					Thread.sleep(100);
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+					return;
 				}
 			} //end of while(true)
 				
 		
-		} catch(SQLException sqle){
+		} 
+		catch(SQLException sqle){
 			System.out.println("sqle1: "+sqle.getMessage());
-		} catch(ClassNotFoundException cnfe){
-			System.out.println("cnfe1: "+ cnfe.getMessage());
-		}		
+			sqle.printStackTrace();
+		}
 	}
 
 }
