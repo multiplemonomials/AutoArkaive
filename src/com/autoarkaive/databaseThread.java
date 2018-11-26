@@ -67,52 +67,53 @@ public class databaseThread extends Thread{
 			Class.forName("com.mysql.jdbc.Driver"); //fully qualified class name of jdbc driver coming from the sql jdbc jar file
 			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 		
-			//convert current time to joda time's LocalTime
-			DateTimeFormatter dateFormat = DateTimeFormat
-	                .forPattern("G,C,Y,x,w,e,E,Y,D,M,d,a,K,h,H,k,m,s,S,z,Z");
-			
-	        LocalTime localtimeobjectnow = new LocalTime();
-	        String now = (localtimeobjectnow.now()).toString();
-	        
-	        //give precision flexibility-- cut off seconds
-	        	now = now.substring(0,5);
-			System.out.println("Current time is " + now);
-	        //
-			
-			
-			String query = "SELECT * FROM myUsers as u , myClasses as c WHERE c.checkinStartTime < ? AND c.checkinEndTime > ? ";
-			ps = conn.prepareStatement(query);
-			ps.setString(1,now);
-			ps.setString(2,now);
-			rs = ps.executeQuery();
-			
-			while(rs.next()){
-				//get the info for the users class
-				//make a checkinrequest object
-				
-				double latitude = rs.getDouble("latitude");
-				double longitude = rs.getDouble("longitude");
-				int altitude = rs.getInt("altitude");
-				String username = rs.getString("arkaive_username");
-				String password = rs.getString("arkaive_password");
-				String courseName = rs.getString("courseName");
-				//now is the checkintime
-				String starttime = rs.getString("checkinStartTime");
-				String endtime= rs.getString("checkinEndTime");
+			while(true) {
+				//convert current time to joda time's LocalTime
+				DateTimeFormatter dateFormat = DateTimeFormat
+				.forPattern("G,C,Y,x,w,e,E,Y,D,M,d,a,K,h,H,k,m,s,S,z,Z");
 
-				//TODO confirm that we can just pass a string to the object and it will make a jodatime
-				DateTimeFormatter formatter = DateTimeFormat.forPattern("HH:mm");
-				LocalTime startdatetime = LocalTime.parse(starttime, formatter);
-				LocalTime enddatetime = LocalTime.parse(endtime, formatter);
-				
-				String cc = getCourseCode(courseName);
-				
-				CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
-			
-				
-				cq.enqueueCheckin(cir);
-			}
-			
+			LocalTime localtimeobjectnow = new LocalTime();
+			String now = (localtimeobjectnow.now()).toString();
+
+			//give precision flexibility-- cut off seconds
+				now = now.substring(0,5);
+				System.out.println("Current time is " + now);
+			//
+
+
+				String query = "SELECT * FROM myUsers as u , myClasses as c WHERE c.checkinStartTime < ? AND c.checkinEndTime > ? ";
+				ps = conn.prepareStatement(query);
+				ps.setString(1,now);
+				ps.setString(2,now);
+				rs = ps.executeQuery();
+
+				while(rs.next()){
+					//get the info for the users class
+					//make a checkinrequest object
+
+					double latitude = rs.getDouble("latitude");
+					double longitude = rs.getDouble("longitude");
+					int altitude = rs.getInt("altitude");
+					String username = rs.getString("arkaive_username");
+					String password = rs.getString("arkaive_password");
+					String courseName = rs.getString("courseName");
+					//now is the checkintime
+					String starttime = rs.getString("checkinStartTime");
+					String endtime= rs.getString("checkinEndTime");
+
+					//TODO confirm that we can just pass a string to the object and it will make a jodatime
+					DateTimeFormatter formatter = DateTimeFormat.forPattern("HH:mm");
+					LocalTime startdatetime = LocalTime.parse(starttime, formatter);
+					LocalTime enddatetime = LocalTime.parse(endtime, formatter);
+
+					String cc = getCourseCode(courseName);
+
+					CheckinRequest cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
+
+
+					cq.enqueueCheckin(cir);
+				}
+			} //end of while(true)
 				
 		
 		} catch(SQLException sqle){
