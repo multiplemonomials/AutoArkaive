@@ -6,10 +6,16 @@ public class fullArkaiveClass {
 	@SerializedName("classname")
 	@Expose
 	String classname;
-	@SerializedName("couseCode")
+	@SerializedName("courseCode")
 	@Expose
-	String couseCode;
+	String courseCode;
 	@SerializedName("checkinStartTime")
 	@Expose
 	String checkinStartTime;
+	
+	public fullArkaiveClass(String classname, String courseCode, String checkinStartTime){
+		this.classname= classname;
+		this.courseCode = courseCode;
+		this.checkinStartTime = checkinStartTime;
+	}
 }

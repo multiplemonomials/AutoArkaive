@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.autoarkaive.communications.ArkaiveClass;
+import com.autoarkaive.communications.fullArkaiveClass;
 import com.google.gson.Gson;
 
 @WebServlet("/UtilityServlet")
@@ -263,24 +264,27 @@ public class UtilityServlet extends HttpServlet{
 		try{
 			
 			Class.forName("com.mysql.jdbc.Driver");
-			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
+			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");			
 			
-			
-			String getstatement = "SELECT classname, courseCode, checkinStartTime FROM myClasses WHERE email=?";
-				
+			String getstatement = "SELECT classname, courseCode, checkinStartTime FROM myClasses WHERE email=?";			
 			
 			ps = conn.prepareStatement(getstatement);
 			ps.setString(1, email);
 			rs = ps.executeQuery();
+			
+			List<fullArkaiveClass> fullclasses = new ArrayList<fullArkaiveClass>();
 			
 			while(rs.next()) {
 				String classname = rs.getString("classname");
 				String courseCode = rs.getString("courseCode");
 				String checkinStartTime = rs.getString("checkInStartTime");
 				
+				fullArkaiveClass fac = new fullArkaiveClass(classname, courseCode, checkinStartTime);
+				fullclasses.add(fac);				
 			}
+			String jsonoutput = new Gson().toJson(fullclasses);
 			
-			return "{\"classWasAdded\": true}";
+			return jsonoutput;
 
 		}catch(SQLException sqle){
 			System.out.println("sqle yo");
