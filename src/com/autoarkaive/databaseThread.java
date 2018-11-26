@@ -80,7 +80,7 @@ public class databaseThread extends Thread{
 	        //
 			
 			
-			String query = "SELECT * FROM myUsers u , myClasses c WHERE c.checkinStartTime = ? ";
+			String query = "SELECT * FROM myUsers as u , myClasses as c WHERE c.checkinStartTime = ? ";
 			ps = conn.prepareStatement(query);
 			ps.setString(1,now);
 			rs = ps.executeQuery();

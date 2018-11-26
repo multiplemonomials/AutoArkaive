@@ -182,8 +182,8 @@ public class UtilityServlet extends HttpServlet{
 			conn = DriverManager.getConnection("jdbc:mysql://localhost/arkaiveInfo?user=" + p.getProperty("user") + "&password=" + p.getProperty("password") + "&useSSL=false");
 			
 			
-			String insertstatement = "INSERT INTO myClasses(checkinStartTime,checkinEndTime,latitude,longitude,altitude,courseCode,classname) "
-					+ "					VALUES (?,?,?,?,?,?,?)";
+			String insertstatement = "INSERT INTO myClasses(checkinStartTime,checkinEndTime,latitude,longitude,altitude,courseCode,classname,email) "
+					+ "					VALUES (?,?,?,?,?,?,?,?)";
 			
 			if((request.getParameter("checkinStartTime")).equals("") || (request.getParameter("checkinStartTime")).equals(null) )
 			   	return "{classWasAdded: false}";
@@ -199,6 +199,8 @@ public class UtilityServlet extends HttpServlet{
 				return "{classWasAdded: false}";
 			else if((request.getParameter("classname")).equals("") || (request.getParameter("classname")).equals(null) )
 				return "{classWasAdded: false}";
+			else if((request.getParameter("email")).equals("") || (request.getParameter("classname")).equals(null) )
+				return "{classWasAdded: false}";
 			else
 				System.out.println("Class was added");
 				
@@ -211,9 +213,11 @@ public class UtilityServlet extends HttpServlet{
 			ps.setString(5, request.getParameter("altitude"));
 			ps.setString(6, request.getParameter("courseCode"));
 			ps.setString(7, request.getParameter("classname"));
+			ps.setString(8, request.getParameter("email"));
 			ps.executeUpdate();
 			
-			
+			return "{\"classWasAdded\": true}";
+
 		}catch(SQLException sqle){
 			System.out.println("sqle yo");
 		} catch (ClassNotFoundException e) {
@@ -329,8 +333,10 @@ public class UtilityServlet extends HttpServlet{
 		}
 		
 		ArrayList<String> userandpass = new ArrayList<String>();
-		
-		if( command.equals("addUser") )
+		if (command == null) {
+			return;
+		}
+		else if(command.equals("addUser")	)
 			json = addUser(request, response);
 		else if( command.equals("addClass") )
 			json = addClass(request, response);
