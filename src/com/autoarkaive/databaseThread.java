@@ -5,8 +5,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.HashSet;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Properties;
 
 import org.joda.time.LocalTime;
@@ -76,9 +76,6 @@ public class databaseThread extends Thread{
 						
 			while(true) {
 				//convert current time to joda time's LocalTime
-				DateTimeFormatter dateFormat = DateTimeFormat
-				.forPattern("G,C,Y,x,w,e,E,Y,D,M,d,a,K,h,H,k,m,s,S,z,Z");
-
 				LocalTime localtimeobjectnow = new LocalTime();
 				String now = (localtimeobjectnow.now()).toString();
 	
@@ -115,11 +112,11 @@ public class databaseThread extends Thread{
 					String usernameAndCourseCode = username+cc;
 
 					CheckinRequest cir = null;
-					if(alreadyCheckedIn.contains(usernameAndCourseCode) == false) {
+					if(!alreadyCheckedIn.contains(usernameAndCourseCode)) {
 						cir = new CheckinRequest(latitude,longitude,altitude,username,password,new ArkaiveClass(courseName, cc),startdatetime,enddatetime);
+						cq.enqueueCheckin(cir);
 					}
 
-					cq.enqueueCheckin(cir);
 					alreadyCheckedIn.add(usernameAndCourseCode);
 				}
 				

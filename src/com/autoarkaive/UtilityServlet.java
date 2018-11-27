@@ -70,6 +70,8 @@ public class UtilityServlet extends HttpServlet{
 				System.out.println ("Count = " + count);
 			}
 			
+			conn.close();
+			
 			return "{\"arkaiveAccountExists\": " + found + "}"; 
 			
 		} catch (SQLException sqle) {
@@ -284,6 +286,8 @@ public class UtilityServlet extends HttpServlet{
 			}
 			String jsonoutput = new Gson().toJson(fullclasses);
 			
+			conn.close();
+			
 			return "{\"classes\": " + jsonoutput + "}";
 
 		}catch(SQLException sqle){
@@ -334,8 +338,11 @@ public class UtilityServlet extends HttpServlet{
 				userandpass.add("didnotfindusername");
 				userandpass.add("didnotfindpassword");
 			}
+			
+			conn.close();
+
 			return userandpass;
-		
+					
 			
 		} catch (SQLException sqle) {
 			System.out.println ("SQLException: " + sqle.getMessage());
@@ -376,10 +383,10 @@ public class UtilityServlet extends HttpServlet{
 		if(cq == null){
 			
 			// real checkin queue
-			//cq = new CheckinQueueActual(p.getProperty("androidSDKPath", "C:/android-sdk"), p.getProperty("AVDName", ""));
+			cq = new CheckinQueueActual(p.getProperty("androidSDKPath", "C:/android-sdk"), p.getProperty("AVDName", ""));
 			
 			// mock checkin queue
-			cq = new CheckinQueueMock();
+			//cq = new CheckinQueueMock();
 			
 			databaseThread dbt = new databaseThread(cq);
 			dbt.start();

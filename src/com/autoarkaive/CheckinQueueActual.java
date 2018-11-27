@@ -90,7 +90,7 @@ public class CheckinQueueActual extends CheckinQueue
 		emulatorLock.lock();
 		ArrayList<ArkaiveClass> classList = emulatorController.listClasses(new ClassListRequest(username, password));
 		emulatorLock.unlock();
-		return null;
+		return classList;
 	}
 	
 	/**
@@ -130,7 +130,7 @@ public class CheckinQueueActual extends CheckinQueue
 			{
 				CheckinRequest currEntry = checkinQueue.take();
 				
-				if(currEntry.checkinEndTime.isAfter(LocalTime.now()))
+				if(currEntry.checkinEndTime.isBefore(LocalTime.now()))
 				{
 					//oh no! we're too late
 					System.err.println("Error: checkin load too high: missed checkin \"" + currEntry.course +"\" for username " + currEntry.username);
